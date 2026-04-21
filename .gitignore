@@ -1,0 +1,28 @@
+# Secrets & local config
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials*.json
+serviceAccount*.json
+
+# macOS
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Node / build artifacts (defensive — site/ has its own but safe at root too)
+node_modules/
+dist/
+build/
+*.log
+*.tsbuildinfo
+
+# Firebase local cache
+.firebase/
+
+# Claude Code local-only settings
+.claude/settings.local.json

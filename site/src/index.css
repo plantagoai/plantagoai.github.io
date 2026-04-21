@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: 220 80% 44%;
+    --primary-foreground: 220 100% 98%;
+    --secondary: 220 20% 92%;
+    --secondary-foreground: 220 20% 20%;
+    --accent: 280 40% 92%;
+    --accent-foreground: 280 40% 20%;
+    --destructive: 0 75% 42%;
+    --destructive-foreground: 0 100% 98%;
+    --background: 220 20% 98%;
+    --foreground: 220 20% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+    --muted: 220 15% 95%;
+    --muted-foreground: 220 10% 40%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 220 80% 44%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --primary: 220 80% 72%;
+    --primary-foreground: 220 80% 16%;
+    --secondary: 220 15% 22%;
+    --secondary-foreground: 220 15% 90%;
+    --accent: 280 30% 22%;
+    --accent-foreground: 280 30% 90%;
+    --destructive: 0 65% 70%;
+    --destructive-foreground: 0 80% 12%;
+    --background: 220 15% 8%;
+    --foreground: 220 10% 92%;
+    --card: 220 15% 11%;
+    --card-foreground: 220 10% 92%;
+    --popover: 220 15% 11%;
+    --popover-foreground: 220 10% 92%;
+    --muted: 220 15% 16%;
+    --muted-foreground: 220 10% 65%;
+    --border: 220 10% 20%;
+    --input: 220 10% 20%;
+    --ring: 220 80% 72%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  pre, code {
+    @apply font-mono;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
