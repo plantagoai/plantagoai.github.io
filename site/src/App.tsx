@@ -10,7 +10,7 @@ import {
   Loader2,
   CheckCheck,
   AlertCircle,
-  Vote,
+  AudioLines,
   Wallet,
   ShoppingCart,
 } from "lucide-react";
@@ -160,12 +160,12 @@ function Hero() {
         <span className="block w-fit mx-auto text-left">
           <span className="block text-foreground">Your</span>
           <span className="flex items-center gap-3 text-indigo-400">
-            <Vote className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
+            <AudioLines className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
             Voice.
           </span>
           <span className="flex items-center gap-3 text-teal-400">
             <Wallet className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
-            Wealth.
+            Share.
           </span>
           <span className="flex items-center gap-3 text-cyan-400">
             <ShoppingCart className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
@@ -174,12 +174,12 @@ function Hero() {
         </span>
       </h1>
       <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed pt-4">
-        Five AI products shipping in parallel — powered by a shared platform of
-        twelve TypeScript packages handling auth, payments, AI, i18n, compliance,
-        and testing.
+        The core shared AI and identity infrastructure for verified-human ecosystems —
+        twelve TypeScript packages handling auth, payments, AI with prompt caching,
+        i18n, compliance, and testing.
       </p>
       <p className="text-sm font-mono text-muted-foreground/60 tracking-wide">
-        5 products · 12 shared packages · one shared platform
+        one shared platform · 12 packages · reused across every product
       </p>
       <div className="flex items-center justify-center gap-3 pt-4">
         <a
@@ -209,45 +209,49 @@ function About() {
             About
           </p>
           <h2 className="font-semibold text-lg text-foreground">
-            Building at the Intersection of AI and Real-World Impact
+            The shared AI and identity layer for verified-human ecosystems
           </h2>
         </div>
         <div className="p-6 space-y-5">
           <p className="text-base text-muted-foreground leading-relaxed">
-            PlantagoAI is a technology studio focused on developing AI-powered platforms
-            that address meaningful challenges. From verifying human identity in an age of
-            deepfakes, to bringing clinical herbalism into the digital era, to connecting
-            global marketplaces with intelligent translations — each project targets a gap
-            where AI can create genuine value.
+            PlantagoAI is the core shared AI and identity infrastructure that powers
+            verified-human ecosystems and decentralized applications. A comprehensive
+            shared-package architecture — authentication, payments, messaging, AI with
+            prompt caching, multi-tenant flows — built once and reused across every product
+            that needs it.
           </p>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Every project ships on the same internal platform — twelve shared packages
-            that handle the undifferentiated work so each new product launches faster
-            than the last.
+            Built to bridge Web2 cloud infrastructure with Web3 protocols. Powers Foundation
+            (verified-human governance on Solana) and adjacent products that need the same
+            identity, AI, and compliance primitives.
           </p>
           <div className="grid md:grid-cols-4 gap-3">
-            <div className="p-4 rounded-md bg-emerald-500/5 border border-emerald-500/10">
-              <p className="text-sm font-semibold text-emerald-400 mb-1">Healthcare</p>
-              <p className="text-sm text-muted-foreground">
-                Clinical herbalism tools with AI-assisted decision support and drug interaction checking.
-              </p>
-            </div>
             <div className="p-4 rounded-md bg-violet-500/5 border border-violet-500/10">
-              <p className="text-sm font-semibold text-violet-400 mb-1">Governance</p>
+              <p className="text-sm font-semibold text-violet-400 mb-1">Verified-Human Identity</p>
               <p className="text-sm text-muted-foreground">
-                Blockchain-verified voting with biometric identity and privacy-preserving verification.
+                ZK identity primitives via Self Protocol passport verification.
+                Sybil-resistant attestation reused across downstream products.
               </p>
             </div>
-            <div className="p-4 rounded-md bg-amber-500/5 border border-amber-500/10">
-              <p className="text-sm font-semibold text-amber-400 mb-1">Commerce</p>
+            <div className="p-4 rounded-md bg-emerald-500/5 border border-emerald-500/10">
+              <p className="text-sm font-semibold text-emerald-400 mb-1">AI Layer</p>
               <p className="text-sm text-muted-foreground">
-                Multi-language, multi-currency marketplaces powered by AI translation.
+                Anthropic Claude with prompt caching as shared infrastructure.
+                Cost-efficient LLM workloads, usage tracking, multi-tenant.
               </p>
             </div>
             <div className="p-4 rounded-md bg-cyan-500/5 border border-cyan-500/10">
-              <p className="text-sm font-semibold text-cyan-400 mb-1">Business</p>
+              <p className="text-sm font-semibold text-cyan-400 mb-1">Governance & Distribution</p>
               <p className="text-sm text-muted-foreground">
-                AI reception, unified communications, and e-commerce for small offices.
+                On-chain governance and verified-human payouts on Solana via
+                Anchor and Rust. Auditable, sybil-resistant, anonymous voting.
+              </p>
+            </div>
+            <div className="p-4 rounded-md bg-amber-500/5 border border-amber-500/10">
+              <p className="text-sm font-semibold text-amber-400 mb-1">Web2 ↔ Web3 Bridge</p>
+              <p className="text-sm text-muted-foreground">
+                Scalable backend services bridging Cloud Functions and Firestore
+                with Solana on-chain programs. Reusable across products.
               </p>
             </div>
           </div>
@@ -618,31 +622,37 @@ function Founder() {
         </div>
         <div className="p-6 space-y-5">
           <p className="text-base text-muted-foreground leading-relaxed">
-            Full-stack engineer and entrepreneur with deep expertise across blockchain,
-            AI/ML, healthcare technology, and e-commerce platforms. Building PlantagoAI
-            to deliver AI-powered solutions that bridge the gap between cutting-edge
-            technology and real-world applications.
+            Hands-on founder, architect, and researcher with 25+ years building production
+            systems at the intersection of distributed systems, cloud infrastructure, and
+            applied AI. Track record of taking research from whiteboard to shipped product —
+            IBM cloud platforms generating $100M+ in revenue, ML-driven cloud-AI products at
+            Toga Networks, and a current verified-human governance stack on Solana. Deep
+            expertise in Rust and Go; comfortable from kernel-adjacent code up to founder-level
+            product strategy.
           </p>
           <div className="grid md:grid-cols-3 gap-3">
-            <div className="p-4 rounded-md bg-violet-500/5 border border-violet-500/10">
-              <p className="text-sm font-semibold text-violet-400 mb-1">Blockchain & Web3</p>
+            <div className="p-4 rounded-md bg-indigo-500/5 border border-indigo-500/10">
+              <p className="text-sm font-semibold text-indigo-400 mb-1">Distributed Systems & Cloud</p>
               <p className="text-sm text-muted-foreground">
-                Solana smart contracts (Rust/Anchor), on-chain governance, identity
-                verification, and decentralized applications.
+                Senior Manager, Cloud Platforms at IBM Research (OpenStack, virtualization,
+                storage, networking). CTO Machine Learning at Toga Networks. Microservices,
+                gRPC, Kubernetes — Rust and Go.
+              </p>
+            </div>
+            <div className="p-4 rounded-md bg-violet-500/5 border border-violet-500/10">
+              <p className="text-sm font-semibold text-violet-400 mb-1">Blockchain & Solana</p>
+              <p className="text-sm text-muted-foreground">
+                Verified-human governance and identity on Solana. On-chain programs in
+                Anchor / Rust; off-chain in Cloud Functions and Firestore. Earlier: PKI and
+                core network functions at HyperMesh.
               </p>
             </div>
             <div className="p-4 rounded-md bg-emerald-500/5 border border-emerald-500/10">
-              <p className="text-sm font-semibold text-emerald-400 mb-1">AI & Full Stack</p>
+              <p className="text-sm font-semibold text-emerald-400 mb-1">Applied AI & ML</p>
               <p className="text-sm text-muted-foreground">
-                React, TypeScript, Node.js, Next.js, Firebase, PostgreSQL.
-                AI integration with Claude, OpenAI, and custom ML pipelines.
-              </p>
-            </div>
-            <div className="p-4 rounded-md bg-amber-500/5 border border-amber-500/10">
-              <p className="text-sm font-semibold text-amber-400 mb-1">Domain Expertise</p>
-              <p className="text-sm text-muted-foreground">
-                Healthcare technology, clinical herbalism, e-commerce,
-                and small business operations platforms.
+                Anthropic Claude with prompt caching as shared infrastructure across products.
+                Earlier: reinforcement-learning and deep-learning auto-scaling productized at
+                Toga Networks (PyTorch, TensorFlow, Keras, Spark).
               </p>
             </div>
           </div>
