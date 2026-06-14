@@ -400,7 +400,7 @@ export const DEFAULT_PROJECTS: Project[] = [
     liveUrl: "https://yoursimulation-app.web.app",
     liveLabel: "Launch the App",
     docsUrl: "https://yoursimulation-app.web.app/docs/",
-    repoUrl: null,
+    repoUrl: "https://github.com/dagangilat/yoursimulation-core",
     statusKind: "beta",
     statusText: "Live — free to use",
     enabled: true,
