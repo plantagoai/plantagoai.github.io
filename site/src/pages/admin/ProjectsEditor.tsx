@@ -59,6 +59,8 @@ function emptyProject(): Project {
     landingUrl: null,
     liveUrl: null,
     liveLabel: null,
+    docsUrl: null,
+    repoUrl: null,
     statusKind: "inprogress",
     statusText: "",
     enabled: true,
@@ -442,6 +444,27 @@ function ProjectForm({
             value={draft.liveUrl ?? ""}
             onChange={(e) => update("liveUrl", e.target.value || null)}
             placeholder="https://..."
+            className={inputClass}
+          />
+        </Field>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-3">
+        <Field label="Docs URL (optional)">
+          <input
+            type="url"
+            value={draft.docsUrl ?? ""}
+            onChange={(e) => update("docsUrl", e.target.value || null)}
+            placeholder="https://..."
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Source / Repo URL (optional)">
+          <input
+            type="url"
+            value={draft.repoUrl ?? ""}
+            onChange={(e) => update("repoUrl", e.target.value || null)}
+            placeholder="https://github.com/..."
             className={inputClass}
           />
         </Field>

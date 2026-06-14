@@ -221,6 +221,8 @@ export interface Project {
   landingUrl: string | null;
   liveUrl: string | null;
   liveLabel: string | null;
+  docsUrl?: string | null;
+  repoUrl?: string | null;
   statusKind: StatusKind;
   statusText: string;
   enabled: boolean;
@@ -372,6 +374,37 @@ export const DEFAULT_PROJECTS: Project[] = [
     statusText: "In Development",
     enabled: true,
     order: 4,
+    version: null,
+    lastReleaseDate: null,
+    releaseNotes: null,
+  },
+  {
+    slug: "yoursimulation",
+    name: "YourSimulation",
+    subtitle: "Discrete-Event Simulation & Optimization",
+    description:
+      "Model any service, queue, or network system — airports, hospitals, data networks, logistics, call centers, factories — then estimate waits, utilization, and throughput, and let the optimizer find the cheapest design that meets your service target. Build it visually, drive it with an AI companion, or script it from the open-source CLI.",
+    iconKey: "zap",
+    colorKey: "teal",
+    stack: ["TypeScript", "React", "React Flow", "Web Workers", "Firebase", "Vite"],
+    highlights: [
+      "Drag-and-drop editor for queues, resources, and networks",
+      "KPIs with 95% confidence intervals — waits, utilization, throughput",
+      "Cross-entropy optimizer finds the cheapest design meeting a service target",
+      "Watch-mode animation + templates (airport, hospital, logistics, network)",
+      "AI companion builds, runs, and optimizes models from plain language",
+      "Open-source MIT engine + CLI + Claude Code skill",
+    ],
+    packages: ["ai", "auth", "firebase-core"],
+    landingUrl: "https://yoursimulation-app.web.app",
+    liveUrl: "https://yoursimulation-app.web.app",
+    liveLabel: "Launch the App",
+    docsUrl: "https://yoursimulation-app.web.app/docs/",
+    repoUrl: null,
+    statusKind: "beta",
+    statusText: "Live — free to use",
+    enabled: true,
+    order: 5,
     version: null,
     lastReleaseDate: null,
     releaseNotes: null,
