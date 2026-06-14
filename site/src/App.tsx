@@ -3,6 +3,7 @@ import {
   CheckCircle2,
   ArrowRight,
   Github,
+  BookOpen,
   Mail,
   Menu,
   X,
@@ -323,17 +324,41 @@ function ProjectCard({ project }: { project: Project }) {
               ))}
             </div>
 
-            {project.liveUrl && (
-              <a
-                href={project.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg ${palette.accentBg} ${palette.accentColor} border ${palette.accentBorder} text-base hover:opacity-80 transition-opacity`}
-              >
-                <ExternalLink className="w-4 h-4" />
-                {project.liveLabel || "Try Live Demo"}
-              </a>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {project.liveUrl && (
+                <a
+                  href={project.liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg ${palette.accentBg} ${palette.accentColor} border ${palette.accentBorder} text-base hover:opacity-80 transition-opacity`}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  {project.liveLabel || "Try Live Demo"}
+                </a>
+              )}
+              {project.docsUrl && (
+                <a
+                  href={project.docsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted/40 text-foreground/80 border border-border text-base hover:text-foreground hover:bg-muted/70 transition-colors"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Docs
+                </a>
+              )}
+              {project.repoUrl && (
+                <a
+                  href={project.repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted/40 text-foreground/80 border border-border text-base hover:text-foreground hover:bg-muted/70 transition-colors"
+                >
+                  <Github className="w-4 h-4" />
+                  Source
+                </a>
+              )}
+            </div>
           </div>
         </div>
 
