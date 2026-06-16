@@ -687,15 +687,27 @@ function Founder() {
   );
 }
 
-const projectOptions = [
-  { id: "foundation", label: "Foundation", color: "text-violet-400 border-violet-500/30 bg-violet-500/10" },
-  { id: "herbpulse", label: "HerbPulse", color: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" },
-  { id: "markethub", label: "MarketHub", color: "text-amber-400 border-amber-500/30 bg-amber-500/10" },
-  { id: "soho", label: "SOHO", color: "text-cyan-400 border-cyan-500/30 bg-cyan-500/10" },
-  { id: "other", label: "Other", color: "text-muted-foreground border-border bg-muted/50" },
-];
+const OTHER_OPTION = {
+  id: "other",
+  label: "Other",
+  color: "text-muted-foreground border-border bg-muted/50",
+};
 
-function ContactForm() {
+function ContactForm({ projects }: { projects: Project[] }) {
+  const projectOptions = [
+    ...projects
+      .filter((p) => p.enabled)
+      .map((p) => {
+        const c = COLORS[p.colorKey];
+        return {
+          id: p.slug,
+          label: p.name,
+          color: `${c.accentColor} ${c.borderColor} ${c.accentBg}`,
+        };
+      }),
+    OTHER_OPTION,
+  ];
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
@@ -952,7 +964,7 @@ export function App() {
         {settings.releasesEnabled && <Releases projects={projects} />}
         <Platform projects={projects} />
         <Founder />
-        <ContactForm />
+        <ContactForm projects={projects} />
         <Newsletter />
       </main>
       <Footer />
