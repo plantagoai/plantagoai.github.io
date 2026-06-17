@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "prod": "solanavote-devnet"
+  },
+  "targets": {
+    "solanavote-devnet": {
+      "hosting": {
+        "personal": [
+          "dagangilat-site"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
