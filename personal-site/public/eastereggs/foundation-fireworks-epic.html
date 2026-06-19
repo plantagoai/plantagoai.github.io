@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Foundation!</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; background: #000510; overflow: hidden; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+window.addEventListener('resize', () => {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+});
+
+const rand = (a, b) => a + Math.random() * (b - a);
+const randInt = (a, b) => Math.floor(rand(a, b + 1));
+
+const PALETTES = [
+  ['#ff4455', '#ff8844', '#ffcc66'],
+  ['#44aaff', '#44eeff', '#ffffff'],
+  ['#ff44ff', '#ff44aa', '#ffaaff'],
+  ['#88ff00', '#44ffaa', '#ccffdd'],
+  ['#ffd700', '#ff8c00', '#fff8cc'],
+  ['#ff0066', '#ff66aa', '#ffddee'],
+  ['#00ffcc', '#00bbff', '#ccffff'],
+  ['#ff6600', '#ffcc00', '#fff0aa'],
+];
+
+const STARS = Array.from({ length: 260 }, () => ({
+  x: Math.random(),
+  y: Math.random() * 0.78,
+  r: rand(0.3, 1.8),
+  base: rand(0.2, 0.85),
+  freq: rand(0.4, 2.2),
+  phase: Math.random() * Math.PI * 2,
+}));
+
+function drawStars(t) {
+  ctx.save();
+  for (const s of STARS) {
+    ctx.globalAlpha = s.base * (0.65 + 0.35 * Math.sin(t * s.freq + s.phase));
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+class Particle {
+  constructor(x, y, vx, vy, color, radius, decay) {
+    this.x = x; this.y = y;
+    this.vx = vx; this.vy = vy;
+    this.color = color;
+    this.r = radius ?? rand(1.5, 3.5);
+    this.alpha = 1;
+    this.decay = decay ?? rand(0.010, 0.020);
+    this.trail = [];
+  }
+  update() {
+    this.trail.push({ x: this.x, y: this.y });
+    if (this.trail.length > 9) this.trail.shift();
+    this.vx *= 0.986;
+    this.vy *= 0.986;
+    this.vy += 0.052;
+    this.x += this.vx;
+    this.y += this.vy;
+    this.alpha -= this.decay;
+  }
+  draw() {
+    if (this.alpha <= 0) return;
+    // Fading trail
+    if (this.trail.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(this.trail[0].x, this.trail[0].y);
+      for (let i = 1; i < this.trail.length; i++) ctx.lineTo(this.trail[i].x, this.trail[i].y);
+      ctx.strokeStyle = this.color;
+      ctx.lineWidth = this.r * 0.55;
+      ctx.globalAlpha = this.alpha * 0.22;
+      ctx.stroke();
+    }
+    // Glowing dot
+    ctx.globalAlpha = this.alpha;
+    ctx.shadowBlur = 9;
+    ctx.shadowColor = this.color;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+  get dead() { return this.alpha <= 0; }
+}
+
+function burst(x, y) {
+  const palette = PALETTES[randInt(0, PALETTES.length - 1)];
+  const [c0, c1, c2] = palette;
+  const out = [];
+  const n = randInt(95, 155);
+
+  // Main radial burst
+  for (let i = 0; i < n; i++) {
+    const angle = (i / n) * Math.PI * 2 + rand(-0.08, 0.08);
+    const speed = rand(1.8, 7.2) * rand(0.7, 1.3);
+    const color = Math.random() < 0.55 ? c0 : Math.random() < 0.6 ? c1 : c2;
+    out.push(new Particle(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, color));
+  }
+
+  // Bright sparkle layer
+  for (let i = 0; i < 45; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const s = rand(0.4, 3.8);
+    out.push(new Particle(x, y, Math.cos(a) * s, Math.sin(a) * s, '#ffffff', rand(0.7, 1.6), rand(0.022, 0.038)));
+  }
+
+  // Optional concentric ring
+  if (Math.random() < 0.38) {
+    const rn = 52;
+    const rs = rand(3.2, 5.8);
+    for (let i = 0; i < rn; i++) {
+      const a = (i / rn) * Math.PI * 2;
+      out.push(new Particle(x, y, Math.cos(a) * rs, Math.sin(a) * rs, c1, rand(1.8, 3.2), rand(0.008, 0.014)));
+    }
+  }
+
+  // Optional star-point streaks
+  if (Math.random() < 0.28) {
+    const pts = randInt(5, 8);
+    for (let i = 0; i < pts; i++) {
+      const a = (i / pts) * Math.PI * 2;
+      const s = rand(6, 10);
+      out.push(new Particle(x, y, Math.cos(a) * s, Math.sin(a) * s, c2, rand(1.2, 2.2), rand(0.013, 0.020)));
+    }
+  }
+
+  return out;
+}
+
+class Rocket {
+  constructor() {
+    this.x = rand(W * 0.12, W * 0.88);
+    this.y = H + 6;
+    this.vx = rand(-1.4, 1.4);
+    this.vy = rand(-H * 0.020, -H * 0.014);
+    this.targetY = rand(H * 0.08, H * 0.42);
+    this.color = PALETTES[randInt(0, PALETTES.length - 1)][1];
+    this.trail = [];
+    this.dead = false;
+  }
+  update(particles) {
+    this.trail.push({ x: this.x, y: this.y });
+    if (this.trail.length > 15) this.trail.shift();
+    this.vy += 0.065;
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.y <= this.targetY || this.vy >= 0) {
+      particles.push(...burst(this.x, this.y));
+      this.dead = true;
+    }
+  }
+  draw() {
+    const n = this.trail.length;
+    for (let i = 0; i < n; i++) {
+      const t = this.trail[i];
+      const frac = i / n;
+      ctx.globalAlpha = frac * 0.85;
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = this.color;
+      ctx.fillStyle = frac > 0.75 ? '#ffffff' : this.color;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, 2.8 * frac, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+}
+
+// ── Cycle state ──────────────────────────────────────────────────────────────
+const CYCLE_MS = 14500;
+let cycleStart = performance.now();
+const rockets = [];
+const particles = [];
+let launches = [];
+let textAlpha = 0;
+
+function scheduleLaunches() {
+  launches = [];
+  const n = randInt(12, 18);
+  for (let i = 0; i < n; i++) launches.push({ t: rand(150, 8000), fired: false });
+  launches.sort((a, b) => a.t - b.t);
+}
+scheduleLaunches();
+
+// ── Main loop ─────────────────────────────────────────────────────────────────
+function loop(ts) {
+  requestAnimationFrame(loop);
+
+  const elapsed = ts - cycleStart;
+
+  // Night sky with motion-blur trail
+  ctx.globalAlpha = 0.17;
+  ctx.fillStyle = '#000510';
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = 1;
+
+  drawStars(ts / 1000);
+
+  // Fire scheduled rockets
+  for (const s of launches) {
+    if (!s.fired && elapsed >= s.t) {
+      rockets.push(new Rocket());
+      s.fired = true;
+    }
+  }
+
+  // Rockets
+  for (let i = rockets.length - 1; i >= 0; i--) {
+    rockets[i].update(particles);
+    if (rockets[i].dead) { rockets.splice(i, 1); continue; }
+    rockets[i].draw();
+  }
+
+  // Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    if (particles[i].dead) { particles.splice(i, 1); continue; }
+    particles[i].draw();
+  }
+
+  ctx.globalAlpha = 1;
+
+  // Text reveal timing
+  if (elapsed >= 8800 && elapsed < 10400) {
+    textAlpha = (elapsed - 8800) / 1600;
+  } else if (elapsed >= 10400 && elapsed < 12000) {
+    textAlpha = 1;
+  } else if (elapsed >= 12000 && elapsed < 13600) {
+    textAlpha = 1 - (elapsed - 12000) / 1600;
+  } else if (elapsed >= CYCLE_MS) {
+    cycleStart = ts;
+    rockets.length = 0;
+    particles.length = 0;
+    textAlpha = 0;
+    scheduleLaunches();
+  } else if (elapsed < 8800) {
+    textAlpha = 0;
+  }
+
+  drawText();
+}
+
+function drawText() {
+  if (textAlpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = textAlpha;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const size = Math.min(W * 0.088, 84);
+  const cx = W / 2;
+  const cy = H / 2;
+
+  // Shadow bloom pass
+  ctx.font = `bold ${size}px Georgia, 'Times New Roman', serif`;
+  ctx.shadowColor = '#ffd700';
+  ctx.shadowBlur = 48;
+  ctx.fillStyle = 'rgba(255, 215, 0, 0.35)';
+  ctx.fillText('Happy Foundation!', cx, cy);
+  ctx.fillText('Happy Foundation!', cx, cy);
+
+  // Gold gradient fill
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = '#fff8aa';
+  const grad = ctx.createLinearGradient(cx - size * 3.8, cy - size, cx + size * 3.8, cy + size);
+  grad.addColorStop(0.0, '#ff9900');
+  grad.addColorStop(0.3, '#ffd700');
+  grad.addColorStop(0.5, '#fffacd');
+  grad.addColorStop(0.7, '#ffd700');
+  grad.addColorStop(1.0, '#ff9900');
+  ctx.fillStyle = grad;
+  ctx.fillText('Happy Foundation!', cx, cy);
+
+  // Subtitle
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = '#aabbff';
+  const sub = Math.min(W * 0.028, 22);
+  ctx.font = `${sub}px Georgia, 'Times New Roman', serif`;
+  ctx.fillStyle = 'rgba(195, 210, 255, 0.92)';
+  ctx.fillText('✦ Here’s to what comes next ✦', cx, cy + size * 1.12);
+
+  ctx.restore();
+}
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
