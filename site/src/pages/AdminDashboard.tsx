@@ -264,7 +264,7 @@ function AdminLogin() {
 // Dashboard sections
 // ---------------------------------------------------------------------------
 
-function IntegrationMatrix() {
+function IntegrationMatrix({ projects }: { projects: ProjectInfo[] }) {
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
@@ -278,7 +278,7 @@ function IntegrationMatrix() {
               <th className="text-left font-mono text-xs uppercase tracking-wider text-muted-foreground pb-2 pr-3">
                 Package
               </th>
-              {PROJECTS.map((p) => (
+              {projects.map((p) => (
                 <th key={p.name} className={`text-xs uppercase tracking-wider pb-2 px-2 text-center ${p.color}`}>
                   {p.name}
                 </th>
@@ -288,11 +288,11 @@ function IntegrationMatrix() {
           </thead>
           <tbody>
             {PACKAGES
-              .filter((pkg) => PROJECTS.some((p) => p.packages.includes(pkg)))
+              .filter((pkg) => projects.some((p) => p.packages.includes(pkg)))
               .map((pkg) => (
                 <tr key={pkg} className="border-t border-border/50">
                   <td className="py-2 pr-3 font-mono text-xs text-foreground/80">{pkg}</td>
-                  {PROJECTS.map((p) => (
+                  {projects.map((p) => (
                     <td key={p.name} className="py-2 px-2 text-center">
                       {p.packages.includes(pkg) ? (
                         <CheckCircle2 className={`w-3.5 h-3.5 inline ${p.color}`} />
@@ -312,7 +312,7 @@ function IntegrationMatrix() {
         <p className="mt-4 pt-3 border-t border-border text-[11px] text-muted-foreground leading-relaxed">
           Unintegrated packages hidden:{" "}
           {PACKAGES
-            .filter((pkg) => !PROJECTS.some((p) => p.packages.includes(pkg)))
+            .filter((pkg) => !projects.some((p) => p.packages.includes(pkg)))
             .map((pkg) => (
               <code key={pkg} className="font-mono text-foreground/70 mr-1.5">
                 {pkg}
@@ -325,10 +325,10 @@ function IntegrationMatrix() {
   );
 }
 
-function ProjectStatusCards() {
+function ProjectStatusCards({ projects }: { projects: ProjectInfo[] }) {
   return (
     <div className="grid md:grid-cols-2 gap-4">
-      {PROJECTS.map((p) => (
+      {projects.map((p) => (
         <div key={p.name} className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className={`w-2 h-2 rounded-full ${p.dotColor}`} />
@@ -367,9 +367,9 @@ function ProjectStatusCards() {
   );
 }
 
-function TestSummary() {
+function TestSummary({ projects }: { projects: ProjectInfo[] }) {
   const totalTests = Object.values(SHARED_TEST_COUNTS).reduce((a, b) => a + b, 0);
-  const totalE2E = PROJECTS.reduce((a, p) => a + p.testCount, 0);
+  const totalE2E = projects.reduce((a, p) => a + p.testCount, 0);
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -478,8 +478,11 @@ function useProjectStatuses() {
 // Live data panels
 // ---------------------------------------------------------------------------
 
-function DBOverview({ statuses }: { statuses: Record<string, ProjectStatus | null> }) {
-  const projectEntries = Object.entries(statuses).filter(([, s]) => s !== null) as [string, ProjectStatus][];
+function DBOverview({ statuses, projects }: { statuses: Record<string, ProjectStatus | null>; projects: ProjectInfo[] }) {
+  const activeNames = new Set(projects.map((p) => p.name));
+  const projectEntries = Object.entries(statuses).filter(
+    ([name, s]) => s !== null && activeNames.has(name),
+  ) as [string, ProjectStatus][];
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -500,7 +503,7 @@ function DBOverview({ statuses }: { statuses: Record<string, ProjectStatus | nul
         ) : (
           <div className="space-y-4">
             {projectEntries.map(([name, status]) => {
-              const project = PROJECTS.find((p) => p.name === name);
+              const project = projects.find((p) => p.name === name);
               const topCollections = Object.entries(status.collections)
                 .filter(([, count]) => count > 0)
                 .sort(([, a], [, b]) => b - a)
@@ -575,16 +578,17 @@ function PaymentStatus({ statuses }: { statuses: Record<string, ProjectStatus | 
   );
 }
 
-function DeletionQueue({ statuses }: { statuses: Record<string, ProjectStatus | null> }) {
+function DeletionQueue({ statuses, projects }: { statuses: Record<string, ProjectStatus | null>; projects: ProjectInfo[] }) {
+  const activeNames = new Set(projects.map((p) => p.name));
   const allPending = Object.entries(statuses)
-    .filter(([, s]) => s !== null)
+    .filter(([name, s]) => s !== null && activeNames.has(name))
     .flatMap(([name, s]) =>
       (s as ProjectStatus).deletionQueue.requests.map((r) => ({ ...r, project: name }))
     );
 
-  const totalPending = Object.values(statuses)
-    .filter((s) => s !== null)
-    .reduce((a, s) => a + (s as ProjectStatus).deletionQueue.pending, 0);
+  const totalPending = Object.entries(statuses)
+    .filter(([name, s]) => s !== null && activeNames.has(name))
+    .reduce((a, [, s]) => a + (s as ProjectStatus).deletionQueue.pending, 0);
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -607,7 +611,7 @@ function DeletionQueue({ statuses }: { statuses: Record<string, ProjectStatus | 
         ) : (
           <div className="space-y-2">
             {allPending.map((r, i) => {
-              const project = PROJECTS.find((p) => p.name === r.project);
+              const project = projects.find((p) => p.name === r.project);
               const daysLeft = r.scheduledAt
                 ? Math.max(0, Math.ceil((new Date(r.scheduledAt).getTime() - Date.now()) / 86400000))
                 : null;
@@ -717,6 +721,14 @@ function TestRunner() {
 export default function AdminDashboard() {
   const { user, loading, isAdmin } = useAdmin();
   const { statuses, loading: statusLoading, refresh } = useProjectStatuses();
+  const { projects: cmsProjects } = useProjects();
+  // PROJECTS below is separate static data (packages/collections/test counts,
+  // not CMS-managed) — cross-referenced against the real CMS `enabled` flag
+  // so this whole dashboard section respects the same active/inactive state
+  // as the public site and the admin login screen, instead of unconditionally
+  // showing every entry regardless of whether it's actually live.
+  const activeProjectNames = new Set(cmsProjects.filter((p) => p.enabled).map((p) => p.name));
+  const visibleProjects = PROJECTS.filter((p) => activeProjectNames.has(p.name));
 
   useEffect(() => {
     if (isAdmin) {
@@ -792,19 +804,19 @@ export default function AdminDashboard() {
         <AnalyticsPanel />
 
         {/* Project status */}
-        <ProjectStatusCards />
+        <ProjectStatusCards projects={visibleProjects} />
 
         {/* Integration + Tests side by side */}
         <div className="grid lg:grid-cols-2 gap-6">
-          <IntegrationMatrix />
-          <TestSummary />
+          <IntegrationMatrix projects={visibleProjects} />
+          <TestSummary projects={visibleProjects} />
         </div>
 
         {/* Live data panels */}
         <div className="grid md:grid-cols-3 gap-4">
-          <DBOverview statuses={statuses} />
-          <PaymentStatus statuses={statuses} />
-          <DeletionQueue statuses={statuses} />
+          <DBOverview statuses={statuses} projects={visibleProjects} />
+          {activeProjectNames.has("MarketHub") && <PaymentStatus statuses={statuses} />}
+          <DeletionQueue statuses={statuses} projects={visibleProjects} />
         </div>
 
         {/* Test Runner */}
