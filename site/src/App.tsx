@@ -15,7 +15,7 @@ import {
   Wallet,
   ShoppingCart,
 } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import {
@@ -26,6 +26,7 @@ import {
   type Project,
 } from "./lib/projects";
 import { useSiteSettings } from "./lib/siteSettings";
+import { logGuestVisit } from "./lib/analytics";
 
 function useNavLinks(): { label: string; href: string }[] {
   const { settings } = useSiteSettings();
@@ -953,6 +954,10 @@ function Footer() {
 export function App() {
   const { projects } = useProjects();
   const { settings } = useSiteSettings();
+
+  useEffect(() => {
+    void logGuestVisit("plantagoai", window.location.pathname);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">

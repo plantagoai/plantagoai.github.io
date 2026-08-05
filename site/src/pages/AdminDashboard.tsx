@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, type User } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import {
@@ -26,6 +26,8 @@ import { Link } from "react-router-dom";
 import { ProjectsEditor } from "./admin/ProjectsEditor";
 import { SiteSettingsPanel } from "./admin/SiteSettingsPanel";
 import { seedDefaultsIfEmpty } from "../lib/projects";
+import { logAdminLogin } from "../lib/analytics";
+import { AnalyticsPanel } from "./admin/AnalyticsPanel";
 
 // ---------------------------------------------------------------------------
 // Data — Integration matrix (static, matches codebase state)
@@ -124,6 +126,7 @@ const ADMIN_EMAILS = ["feedmyinfo@gmail.com", "dagan.gilat@gmail.com"];
 function useAdmin() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const loggedUidRef = useRef<string | null>(null);
 
   useEffect(() => {
     return onAuthStateChanged(auth, (u) => {
@@ -133,6 +136,15 @@ function useAdmin() {
   }, []);
 
   const isAdmin = user ? ADMIN_EMAILS.includes(user.email || "") : false;
+
+  useEffect(() => {
+    // Log once per signed-in session, not on every re-render/token refresh.
+    if (isAdmin && user && loggedUidRef.current !== user.uid) {
+      loggedUidRef.current = user.uid;
+      logAdminLogin(user).catch(() => {});
+    }
+    if (!user) loggedUidRef.current = null;
+  }, [isAdmin, user]);
 
   return { user, loading, isAdmin };
 }
@@ -778,6 +790,9 @@ export default function AdminDashboard() {
 
         {/* Projects configuration (CMS) */}
         <ProjectsEditor />
+
+        {/* Login + guest analytics */}
+        <AnalyticsPanel />
 
         {/* Project status */}
         <ProjectStatusCards />
