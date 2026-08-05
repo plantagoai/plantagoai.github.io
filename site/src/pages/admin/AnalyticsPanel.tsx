@@ -85,7 +85,7 @@ function GuestVisitsCard({ summary, loading }: { summary: GuestVisitSummary | nu
               </div>
               <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
                 <p className="text-xl font-semibold text-cyan-400">
-                  {Object.keys(summary.bySite).length}
+                  {Object.values(summary.bySite).filter((count) => count > 0).length}
                 </p>
                 <p className="text-[10px] text-muted-foreground uppercase">Sites</p>
               </div>
