@@ -17,6 +17,7 @@ serviceAccount*.json
 # Node / build artifacts (defensive — site/ has its own but safe at root too)
 node_modules/
 dist/
+personal-dist/
 build/
 *.log
 *.tsbuildinfo
