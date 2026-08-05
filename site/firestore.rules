@@ -40,26 +40,20 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // admin_logins / guest_visits: written exclusively by the
+    // logAdminLoginFn/logGuestVisitFn Cloud Functions (Admin SDK, bypasses
+    // these rules entirely) so the real client IP can be captured
+    // server-side — client JS can't reliably self-report it. Read
+    // exclusively via the getAnalyticsSessions callable, which resolves
+    // country/city from the stored IP server-side and never returns the
+    // raw IP to any client. No path needs direct client access to either
+    // collection, so both are fully closed here.
     match /admin_logins/{docId} {
-      allow read: if isAdmin();
-      allow create: if isAdmin()
-                    && request.resource.data.keys().hasOnly(['email', 'uid', 'loggedInAt'])
-                    && request.resource.data.email is string
-                    && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if false;
+      allow read, write: if false;
     }
 
     match /guest_visits/{docId} {
-      // Public, unauthenticated writes by design (anonymous pageview
-      // counter) — kept abuse-resistant via tight shape validation rather
-      // than auth, since visitors are never signed in. No PII fields
-      // exist to validate against; site/path are the entire payload.
-      allow read: if isAdmin();
-      allow create: if request.resource.data.keys().hasOnly(['site', 'path', 'visitedAt'])
-                    && request.resource.data.site in ['plantagoai', 'dagangilat']
-                    && request.resource.data.path is string
-                    && request.resource.data.path.size() < 500;
-      allow update, delete: if false;
+      allow read, write: if false;
     }
 
     match /projects/{docId} {

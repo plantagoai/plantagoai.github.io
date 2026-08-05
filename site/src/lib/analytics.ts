@@ -1,15 +1,6 @@
-import {
-  collection,
-  addDoc,
-  query,
-  orderBy,
-  limit as fsLimit,
-  getDocs,
-  serverTimestamp,
-  Timestamp,
-} from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import type { User } from "firebase/auth";
-import { db } from "./firebase";
+import { app } from "./firebase";
 import {
   summarizeAdminLogins,
   summarizeGuestVisits,
@@ -31,71 +22,102 @@ export {
 };
 
 // ---------------------------------------------------------------------------
-// Admin panel login analytics
+// Admin panel login analytics + guest browsing analytics
 //
-// Design mirrors foundation's sessions/getLoginAnalytics pattern (one row
-// per login event, summarized client-side) but simplified for this app:
-// no ring-based permissions, no geo lookup, no Cloud Function — plantagoai-
-// site's admin gate is just an email allowlist and its Firestore rules are
-// already isAdmin()-gated, so a direct client read is safe and consistent
-// with how the rest of this dashboard (DBOverview, TestRunner) already
-// reads Firestore directly.
+// Both are logged and read exclusively through Cloud Functions now (see
+// functions/analytics.js), not direct client Firestore calls — the real
+// visitor IP can only be captured server-side (request.rawRequest.ip /
+// req.ip), never trusted from client JS. Firestore rules for both
+// collections are `allow read, write: if false` as a result: there is no
+// direct-client path to either collection anymore.
 // ---------------------------------------------------------------------------
 
-export async function logAdminLogin(user: User): Promise<void> {
-  await addDoc(collection(db, "admin_logins"), {
-    email: user.email || "",
-    uid: user.uid,
-    loggedInAt: serverTimestamp(),
-  });
+const fns = getFunctions(app, "us-east1");
+
+export async function logAdminLogin(_user: User): Promise<void> {
+  // _user kept in the signature for callsite compatibility (useAdmin()
+  // already has it on hand) even though the callable derives identity
+  // from the caller's own ID token, not a client-supplied value.
+  const fn = httpsCallable(fns, "logAdminLoginFn");
+  await fn({});
 }
-
-export async function fetchRecentAdminLogins(max = 50): Promise<AdminLoginRow[]> {
-  const q = query(collection(db, "admin_logins"), orderBy("loggedInAt", "desc"), fsLimit(max));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => {
-    const data = d.data();
-    const ts = data.loggedInAt as Timestamp | undefined;
-    return {
-      email: data.email || "",
-      uid: data.uid || "",
-      loggedInAt: ts ? ts.toDate().toISOString() : new Date(0).toISOString(),
-    };
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Guest browsing analytics — anonymous pageview counter for public sites
-//
-// Deliberately minimal: no PII, no fingerprinting, no cross-session
-// identity. One doc per pageview: {site, path, visitedAt}. Writes are
-// public (unauthenticated visitors), reads are admin-only — see
-// firestore.rules for the shape validation that keeps this collection
-// resistant to abuse despite the open write.
-// ---------------------------------------------------------------------------
 
 export async function logGuestVisit(site: GuestSite, path: string = "/"): Promise<void> {
   try {
-    await addDoc(collection(db, "guest_visits"), {
-      site,
-      path: path.slice(0, 500),
-      visitedAt: serverTimestamp(),
+    await fetch("/api/logGuestVisit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ site, path: path.slice(0, 500) }),
     });
   } catch {
     // Analytics must never break the site for a visitor — swallow silently.
   }
 }
 
-export async function fetchRecentGuestVisits(max = 200): Promise<GuestVisitRow[]> {
-  const q = query(collection(db, "guest_visits"), orderBy("visitedAt", "desc"), fsLimit(max));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => {
-    const data = d.data();
-    const ts = data.visitedAt as Timestamp | undefined;
-    return {
-      site: data.site,
-      path: data.path || "",
-      visitedAt: ts ? ts.toDate().toISOString() : new Date(0).toISOString(),
-    };
+interface SessionRow {
+  id: string;
+  ts: number | null;
+  country: string | null;
+  city: string | null;
+}
+interface AdminLoginSessionRow extends SessionRow {
+  email: string | null;
+  uid: string | null;
+}
+interface GuestVisitSessionRow extends SessionRow {
+  site: GuestSite | null;
+  path: string | null;
+}
+
+interface SessionsResponse<T> {
+  rows: T[];
+  meta: { from: number; to: number; total: number; truncated: boolean; hardLimit: number };
+}
+
+const getAnalyticsSessionsFn = httpsCallable<
+  { kind: "admin_logins" | "guest_visits"; from: string; to: string }
+>(fns, "getAnalyticsSessions");
+
+export async function fetchAdminLoginRows(fromMs: number, toMs: number): Promise<{ rows: AdminLoginRow[]; truncated: boolean }> {
+  const { data } = await getAnalyticsSessionsFn({
+    kind: "admin_logins",
+    from: new Date(fromMs).toISOString(),
+    to: new Date(toMs).toISOString(),
   });
+  const { rows, meta } = data as SessionsResponse<AdminLoginSessionRow>;
+  return {
+    rows: rows
+      .filter((r): r is AdminLoginSessionRow & { ts: number } => r.ts != null)
+      .map((r) => ({
+        email: r.email || "",
+        uid: r.uid || "",
+        loggedInAt: new Date(r.ts).toISOString(),
+        country: r.country,
+        city: r.city,
+      })),
+    truncated: meta.truncated,
+  };
+}
+
+export async function fetchGuestVisitRows(fromMs: number, toMs: number): Promise<{ rows: GuestVisitRow[]; truncated: boolean }> {
+  const { data } = await getAnalyticsSessionsFn({
+    kind: "guest_visits",
+    from: new Date(fromMs).toISOString(),
+    to: new Date(toMs).toISOString(),
+  });
+  const { rows, meta } = data as SessionsResponse<GuestVisitSessionRow>;
+  return {
+    rows: rows
+      .filter((r): r is GuestVisitSessionRow & { ts: number; site: GuestSite } =>
+        r.ts != null && (r.site === "plantagoai" || r.site === "dagangilat"),
+      )
+      .map((r) => ({
+        site: r.site,
+        path: r.path || "",
+        visitedAt: new Date(r.ts).toISOString(),
+        country: r.country,
+        city: r.city,
+      })),
+    truncated: meta.truncated,
+  };
 }

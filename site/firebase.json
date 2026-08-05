@@ -44,6 +44,10 @@
       ],
       "rewrites": [
         {
+          "source": "/api/logGuestVisit",
+          "function": { "functionId": "logGuestVisitFn", "region": "us-east1" }
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }
@@ -72,6 +76,10 @@
         {
           "source": "/api/personalContact",
           "function": { "functionId": "personalContact", "region": "us-east1" }
+        },
+        {
+          "source": "/api/logGuestVisit",
+          "function": { "functionId": "logGuestVisitFn", "region": "us-east1" }
         },
         {
           "source": "**",

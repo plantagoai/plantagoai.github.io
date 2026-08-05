@@ -1,13 +1,21 @@
 import { useEffect, useState } from "react";
-import { LogIn, Users as UsersIcon, Loader2 } from "lucide-react";
+import { LogIn, Users as UsersIcon, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import {
-  fetchRecentAdminLogins,
-  fetchRecentGuestVisits,
+  fetchAdminLoginRows,
+  fetchGuestVisitRows,
   summarizeAdminLogins,
   summarizeGuestVisits,
   type AdminLoginSummary,
   type GuestVisitSummary,
+  type AdminLoginRow,
+  type GuestVisitRow,
 } from "../../lib/analytics";
+import { SessionDrilldown } from "./SessionDrilldown";
+
+type AdminLoginRowWithTs = AdminLoginRow & { ts: string };
+type GuestVisitRowWithTs = GuestVisitRow & { ts: string };
+
+const SUMMARY_WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30d, independent of the drill-down's own range picker
 
 function fmtWhen(iso: string): string {
   const date = new Date(iso);
@@ -20,12 +28,20 @@ function fmtWhen(iso: string): string {
 }
 
 function AdminLoginsCard({ summary, loading }: { summary: AdminLoginSummary | null; loading: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
         <LogIn className="w-4 h-4 text-violet-400" />
         <h2 className="font-semibold text-sm">Admin Logins</h2>
-        {loading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground ml-auto" />}
+        {loading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground ml-2" />}
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Details {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        </button>
       </div>
       <div className="p-4">
         {!summary || summary.total === 0 ? (
@@ -35,7 +51,7 @@ function AdminLoginsCard({ summary, loading }: { summary: AdminLoginSummary | nu
             <div className="grid grid-cols-2 gap-3 text-center mb-4">
               <div className="p-3 rounded-lg bg-violet-500/5 border border-violet-500/10">
                 <p className="text-xl font-semibold text-violet-400">{summary.total}</p>
-                <p className="text-[10px] text-muted-foreground uppercase">Total Logins</p>
+                <p className="text-[10px] text-muted-foreground uppercase">Logins (30d)</p>
               </div>
               <div className="p-3 rounded-lg bg-violet-500/5 border border-violet-500/10">
                 <p className="text-xl font-semibold text-violet-400">
@@ -57,17 +73,38 @@ function AdminLoginsCard({ summary, loading }: { summary: AdminLoginSummary | nu
           </>
         )}
       </div>
+      {expanded && (
+        <div className="p-4 border-t border-border">
+          <SessionDrilldown<AdminLoginRowWithTs>
+            title="Admin Logins"
+            fetchRows={async (from, to) => {
+              const { rows, truncated } = await fetchAdminLoginRows(from, to);
+              return { rows: rows.map((r) => ({ ...r, ts: r.loggedInAt })), truncated };
+            }}
+            identityLabel={(r) => r.email}
+            identityKey={(r) => r.uid || r.email}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
 function GuestVisitsCard({ summary, loading }: { summary: GuestVisitSummary | null; loading: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
         <UsersIcon className="w-4 h-4 text-cyan-400" />
         <h2 className="font-semibold text-sm">Guest Visits</h2>
-        {loading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground ml-auto" />}
+        {loading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground ml-2" />}
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Details {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        </button>
       </div>
       <div className="p-4">
         {!summary || summary.total === 0 ? (
@@ -77,7 +114,7 @@ function GuestVisitsCard({ summary, loading }: { summary: GuestVisitSummary | nu
             <div className="grid grid-cols-3 gap-3 text-center mb-4">
               <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
                 <p className="text-xl font-semibold text-cyan-400">{summary.total}</p>
-                <p className="text-[10px] text-muted-foreground uppercase">Total</p>
+                <p className="text-[10px] text-muted-foreground uppercase">Visits (30d)</p>
               </div>
               <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
                 <p className="text-xl font-semibold text-cyan-400">{summary.last24h}</p>
@@ -109,6 +146,19 @@ function GuestVisitsCard({ summary, loading }: { summary: GuestVisitSummary | nu
           </>
         )}
       </div>
+      {expanded && (
+        <div className="p-4 border-t border-border">
+          <SessionDrilldown<GuestVisitRowWithTs>
+            title="Guest Visits"
+            fetchRows={async (from, to) => {
+              const { rows, truncated } = await fetchGuestVisitRows(from, to);
+              return { rows: rows.map((r) => ({ ...r, ts: r.visitedAt })), truncated };
+            }}
+            identityLabel={(r) => `${r.site} · ${r.path}`}
+            identityKey={(r) => `${r.site}:${r.path}`}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -122,13 +172,15 @@ export function AnalyticsPanel() {
     let cancelled = false;
     (async () => {
       try {
+        const to = Date.now();
+        const from = to - SUMMARY_WINDOW_MS;
         const [logins, visits] = await Promise.all([
-          fetchRecentAdminLogins(50),
-          fetchRecentGuestVisits(500),
+          fetchAdminLoginRows(from, to),
+          fetchGuestVisitRows(from, to),
         ]);
         if (cancelled) return;
-        setLoginSummary(summarizeAdminLogins(logins));
-        setVisitSummary(summarizeGuestVisits(visits));
+        setLoginSummary(summarizeAdminLogins(logins.rows));
+        setVisitSummary(summarizeGuestVisits(visits.rows));
       } finally {
         if (!cancelled) setLoading(false);
       }

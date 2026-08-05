@@ -7,6 +7,7 @@ import { createMailer, sendEmail, buildUnsubscribeUrl, renderUnsubscribeFooter }
 initializeApp();
 
 export { personalChat, personalContact } from "./personal-site.js";
+export { logAdminLoginFn, logGuestVisitFn, getAnalyticsSessions } from "./analytics.js";
 
 const UNSUBSCRIBE_BASE_URL = "https://us-east1-plantagoai.cloudfunctions.net/unsubscribe";
 

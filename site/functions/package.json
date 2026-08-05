@@ -11,6 +11,7 @@
     "@plantagoai/messaging": "file:../../../shared/packages/messaging",
     "firebase-admin": "^13.0.0",
     "firebase-functions": "^6.3.0",
+    "geoip-lite": "^2.0.2",
     "resend": "^4.0.0"
   }
 }

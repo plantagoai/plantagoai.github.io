@@ -13,7 +13,7 @@ const firebaseConfig = {
   measurementId: "G-ZQZ012M9J6",
 };
 
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 
 initializeAppCheck(app, {
   provider: new ReCaptchaEnterpriseProvider("6LeoMcMsAAAAAH1rSpp_iIhQKS_s09JbQPlHRYtl"),
