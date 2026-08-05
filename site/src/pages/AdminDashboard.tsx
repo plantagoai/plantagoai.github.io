@@ -16,11 +16,11 @@ import {
   AlertCircle,
   Package,
   Globe,
-  Compass,
   Landmark,
   Heart,
   ShoppingCart,
   Building2,
+  type LucideIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ProjectsEditor } from "./admin/ProjectsEditor";
@@ -110,6 +110,18 @@ const PROJECTS: ProjectInfo[] = [
     collections: [],
   },
 ];
+
+// Login-screen icon strip only shows live products (PROJECTS entries with a
+// reachable url) — a badge for something you can't actually visit isn't
+// really "active". Icon/gradient per project name since PROJECTS itself
+// doesn't carry a LucideIcon (it's a plain data array shared with the
+// dashboard tables below, which don't need one).
+const PROJECT_LOGIN_BADGE: Record<string, { icon: LucideIcon; gradient: string }> = {
+  Foundation: { icon: Landmark, gradient: "from-violet-500 to-indigo-500" },
+  HerbPulse: { icon: Heart, gradient: "from-emerald-500 to-teal-500" },
+  MarketHub: { icon: ShoppingCart, gradient: "from-amber-500 to-orange-500" },
+  SOHO: { icon: Building2, gradient: "from-cyan-500 to-blue-500" },
+};
 
 const SHARED_TEST_COUNTS: Record<string, number> = {
   "firebase-core": 5, auth: 18, payments: 32, ai: 24,
@@ -206,24 +218,27 @@ function AdminLogin() {
               products, site settings, contacts, and subscribers.
             </p>
 
-            <div className="grid grid-cols-5 gap-2">
-              {[
-                { icon: Landmark, gradient: "from-violet-500 to-indigo-500", label: "Foundation" },
-                { icon: Compass, gradient: "from-sky-500 to-cyan-500", label: "Nomadex" },
-                { icon: Heart, gradient: "from-emerald-500 to-teal-500", label: "HerbPulse" },
-                { icon: ShoppingCart, gradient: "from-amber-500 to-orange-500", label: "MarketHub" },
-                { icon: Building2, gradient: "from-cyan-500 to-blue-500", label: "SOHO" },
-              ].map(({ icon: Icon, gradient, label }) => (
-                <div key={label} className="flex flex-col items-center gap-1.5">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-md shadow-black/20`}>
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-[10px] font-mono text-muted-foreground/70 tracking-wide truncate w-full text-center">
-                    {label}
-                  </span>
+            {(() => {
+              const liveProjects = PROJECTS.filter((p) => p.url && PROJECT_LOGIN_BADGE[p.name]);
+              if (liveProjects.length === 0) return null;
+              return (
+                <div className="flex justify-center gap-4">
+                  {liveProjects.map((p) => {
+                    const { icon: Icon, gradient } = PROJECT_LOGIN_BADGE[p.name];
+                    return (
+                      <div key={p.name} className="flex flex-col items-center gap-1.5">
+                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-md shadow-black/20`}>
+                          <Icon className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-[10px] font-mono text-muted-foreground/70 tracking-wide truncate w-full text-center">
+                          {p.name}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
 
             {error && (
               <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
