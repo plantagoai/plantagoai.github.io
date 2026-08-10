@@ -175,14 +175,43 @@ function Nav() {
 
 /* Hero stats. Foundation's hero pairs the pillar headline with a row of
    white stat cards (ZK / 1:1 / 0.4s); these are the PlantagoAI equivalents,
-   carrying the copy that used to sit in the mono one-liner underneath. */
-const heroStats: { value: string; label: string; note: string; tone: string }[] = [
-  { value: "1", label: "Shared platform", note: "Built once, reused everywhere", tone: "text-emerald-700" },
-  { value: "12", label: "TypeScript packages", note: "Auth, payments, AI, compliance", tone: "text-teal-700" },
-  { value: "5", label: "Products in parallel", note: "No corners cut on the basics", tone: "text-cyan-700" },
-];
+   carrying the copy that used to sit in the mono one-liner underneath.
 
-function Hero() {
+   Only "1 shared platform" is a constant — it is the claim itself, not a
+   count. The other two are derived from the same data the rest of the page
+   renders, so a package added to the Platform section or a product toggled
+   in /admin can't leave a stale number in the hero. */
+function useHeroStats(projects: Project[], loading: boolean) {
+  // useProjects() starts at [] before the Firestore snapshot lands; counting
+  // that would flash a confident "0". Show a placeholder until it resolves.
+  const visibleProducts = projects.filter((p) => p.enabled).length;
+  const pending = loading ? "—" : null;
+
+  return [
+    {
+      value: "1",
+      label: "Shared platform",
+      note: "Built once, reused everywhere",
+      tone: "text-emerald-700",
+    },
+    {
+      value: String(sharedPackages.length),
+      label: "TypeScript packages",
+      note: "Auth, payments, AI, compliance",
+      tone: "text-teal-700",
+    },
+    {
+      value: pending ?? String(visibleProducts),
+      label: visibleProducts === 1 && !pending ? "Product in parallel" : "Products in parallel",
+      note: "No corners cut on the basics",
+      tone: "text-cyan-700",
+    },
+  ];
+}
+
+function Hero({ projects, loading }: { projects: Project[]; loading: boolean }) {
+  const heroStats = useHeroStats(projects, loading);
+
   return (
     <section className="pt-10 pb-14 md:pt-16 md:pb-20">
       <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 backdrop-blur px-3.5 py-1.5 text-sm font-medium text-foreground/80">
@@ -999,7 +1028,7 @@ function Footer() {
 }
 
 export function App() {
-  const { projects } = useProjects();
+  const { projects, loading } = useProjects();
   const { settings } = useSiteSettings();
 
   useEffect(() => {
@@ -1019,7 +1048,7 @@ export function App() {
       </div>
       <Nav />
       <main className="p-6 lg:p-8 max-w-5xl mx-auto space-y-10 animate-fade-in">
-        <Hero />
+        <Hero projects={projects} loading={loading} />
         <About />
         <Projects projects={projects} />
         {settings.releasesEnabled && <Releases projects={projects} />}
