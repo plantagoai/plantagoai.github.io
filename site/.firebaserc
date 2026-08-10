@@ -2,14 +2,6 @@
   "projects": {
     "default": "plantagoai"
   },
-  "targets": {
-    "plantagoai": {
-      "hosting": {
-        "personal": [
-          "dagangilat-personal"
-        ]
-      }
-    }
-  },
+  "targets": {},
   "etags": {}
 }

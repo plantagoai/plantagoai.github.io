@@ -9,7 +9,11 @@
     {
       "site": "plantagoai",
       "public": "dist",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
       "headers": [
         {
           "source": "**/*.@(js|css|svg|png|jpg|jpeg|gif|ico|woff2)",
@@ -45,41 +49,10 @@
       "rewrites": [
         {
           "source": "/api/logGuestVisit",
-          "function": { "functionId": "logGuestVisitFn", "region": "us-east1" }
-        },
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
-      ]
-    },
-    {
-      "target": "personal",
-      "public": "personal-dist",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "headers": [
-        {
-          "source": "**/*.@(js|css|svg|png|jpg|jpeg|gif|ico|woff2)",
-          "headers": [
-            {
-              "key": "Cache-Control",
-              "value": "public, max-age=31536000, immutable"
-            }
-          ]
-        }
-      ],
-      "rewrites": [
-        {
-          "source": "/api/personalChat",
-          "function": { "functionId": "personalChat", "region": "us-east1" }
-        },
-        {
-          "source": "/api/personalContact",
-          "function": { "functionId": "personalContact", "region": "us-east1" }
-        },
-        {
-          "source": "/api/logGuestVisit",
-          "function": { "functionId": "logGuestVisitFn", "region": "us-east1" }
+          "function": {
+            "functionId": "logGuestVisitFn",
+            "region": "us-east1"
+          }
         },
         {
           "source": "**",

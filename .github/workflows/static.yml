@@ -1,9 +1,19 @@
 # Deploys two things on every push to main:
 #   1. Root static content → GitHub Pages (the plantagoai marketing/stealth page)
-#   2. personal-site/ (React/Vite) → Firebase Hosting dagangilat-site (dagangilat.com)
+#   2. personal-site/ (React/Vite) → Firebase Hosting dagangilat-personal
+#      (dagangilat.com), in the plantagoai project.
+#
+# The hosting site moved from dagangilat-site (solanavote-devnet) to
+# dagangilat-personal (plantagoai) in the 2026-08-05 domain consolidation, but
+# this job kept deploying to the old one. dagangilat.com therefore served a
+# frozen 2026-08-05 build for five days and silently dropped its guest-visit
+# analytics, because the build carrying that code only ever reached the
+# orphaned site. Target and project now follow the domain; see the root
+# .firebaserc, which is the single source of truth for this deploy.
 #
 # Required secrets (repo Settings → Secrets → Actions):
-#   FIREBASE_SERVICE_ACCOUNT_SOLANAVOTE_DEVNET  — SA key for the solanavote-devnet project
+#   FIREBASE_SERVICE_ACCOUNT_PLANTAGOAI  — SA key for the plantagoai project,
+#     with the Firebase Hosting Admin role.
 
 name: Deploy
 
@@ -43,6 +53,7 @@ jobs:
 
   deploy-personal-site:
     name: Build + deploy personal site → Firebase (dagangilat.com)
+    # Fails loudly rather than deploying a stale or empty build.
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -57,12 +68,24 @@ jobs:
         working-directory: personal-site
         run: npm install && npm run build
 
+      # The guest-visit beacon is fire-and-forget and swallows every error, so
+      # a build that lost the call looks identical to a working one from the
+      # outside. Assert it survived bundling before shipping.
+      - name: Verify analytics survived the build
+        run: |
+          set -euo pipefail
+          if ! grep -rq "api/logGuestVisit" personal-site/dist/assets/*.js; then
+            echo "::error::personal-site build has no /api/logGuestVisit call — guest analytics would silently record nothing."
+            exit 1
+          fi
+          echo "ok: guest-visit beacon present in bundle"
+
       - name: Install firebase-tools
         run: npm install -g firebase-tools
 
       - name: Write service-account JSON
         env:
-          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SOLANAVOTE_DEVNET }}
+          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PLANTAGOAI }}
         run: |
           printf '%s' "$SA_JSON" > "$RUNNER_TEMP/sa.json"
           chmod 600 "$RUNNER_TEMP/sa.json"
@@ -71,3 +94,24 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
         run: firebase deploy --project prod --only hosting:personal
+
+      # Catches a deploy that landed on a hosting site without the function
+      # rewrites — the other half of the 2026-08-05 failure. With the rewrite,
+      # the function answers GET with 405 JSON; without it, the SPA catch-all
+      # serves index.html as 200 HTML and the beacon POSTs into the void.
+      - name: Smoke-test the live rewrite
+        run: |
+          set -euo pipefail
+          for i in 1 2 3; do
+            CT=$(curl -sS -o /dev/null -w '%{content_type}' --max-time 20 \
+                   https://dagangilat.com/api/logGuestVisit || true)
+            case "$CT" in
+              application/json*)
+                echo "ok: /api/logGuestVisit reaches the function ($CT)"
+                exit 0 ;;
+            esac
+            echo "attempt $i: got '${CT:-no response}', retrying..."
+            sleep 10
+          done
+          echo "::error::/api/logGuestVisit is not routed to logGuestVisitFn on dagangilat.com — guest analytics will record nothing."
+          exit 1

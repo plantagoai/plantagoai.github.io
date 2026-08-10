@@ -1,12 +1,12 @@
 {
   "projects": {
-    "prod": "solanavote-devnet"
+    "prod": "plantagoai"
   },
   "targets": {
-    "solanavote-devnet": {
+    "plantagoai": {
       "hosting": {
         "personal": [
-          "dagangilat-site"
+          "dagangilat-personal"
         ]
       }
     }
