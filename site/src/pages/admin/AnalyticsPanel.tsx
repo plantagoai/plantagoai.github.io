@@ -33,7 +33,7 @@ function AdminLoginsCard({ summary, loading }: { summary: AdminLoginSummary | nu
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
-        <LogIn className="w-4 h-4 text-violet-400" />
+        <LogIn className="w-4 h-4 text-indigo-700" />
         <h2 className="font-semibold text-sm">Admin Logins</h2>
         {loading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground ml-2" />}
         <button
@@ -49,12 +49,12 @@ function AdminLoginsCard({ summary, loading }: { summary: AdminLoginSummary | nu
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 text-center mb-4">
-              <div className="p-3 rounded-lg bg-violet-500/5 border border-violet-500/10">
-                <p className="text-xl font-semibold text-violet-400">{summary.total}</p>
+              <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
+                <p className="text-xl font-semibold text-indigo-700">{summary.total}</p>
                 <p className="text-[10px] text-muted-foreground uppercase">Logins (30d)</p>
               </div>
-              <div className="p-3 rounded-lg bg-violet-500/5 border border-violet-500/10">
-                <p className="text-xl font-semibold text-violet-400">
+              <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
+                <p className="text-xl font-semibold text-indigo-700">
                   {summary.lastLogin ? fmtWhen(summary.lastLogin) : "—"}
                 </p>
                 <p className="text-[10px] text-muted-foreground uppercase">Last Login</p>
@@ -96,7 +96,7 @@ function GuestVisitsCard({ summary, loading }: { summary: GuestVisitSummary | nu
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
-        <UsersIcon className="w-4 h-4 text-cyan-400" />
+        <UsersIcon className="w-4 h-4 text-cyan-700" />
         <h2 className="font-semibold text-sm">Guest Visits</h2>
         {loading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground ml-2" />}
         <button
@@ -112,16 +112,16 @@ function GuestVisitsCard({ summary, loading }: { summary: GuestVisitSummary | nu
         ) : (
           <>
             <div className="grid grid-cols-3 gap-3 text-center mb-4">
-              <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
-                <p className="text-xl font-semibold text-cyan-400">{summary.total}</p>
+              <div className="p-3 rounded-lg bg-cyan-50 border border-cyan-200">
+                <p className="text-xl font-semibold text-cyan-700">{summary.total}</p>
                 <p className="text-[10px] text-muted-foreground uppercase">Visits (30d)</p>
               </div>
-              <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
-                <p className="text-xl font-semibold text-cyan-400">{summary.last24h}</p>
+              <div className="p-3 rounded-lg bg-cyan-50 border border-cyan-200">
+                <p className="text-xl font-semibold text-cyan-700">{summary.last24h}</p>
                 <p className="text-[10px] text-muted-foreground uppercase">Last 24h</p>
               </div>
-              <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
-                <p className="text-xl font-semibold text-cyan-400">
+              <div className="p-3 rounded-lg bg-cyan-50 border border-cyan-200">
+                <p className="text-xl font-semibold text-cyan-700">
                   {Object.values(summary.bySite).filter((count) => count > 0).length}
                 </p>
                 <p className="text-[10px] text-muted-foreground uppercase">Sites</p>
@@ -135,7 +135,7 @@ function GuestVisitsCard({ summary, loading }: { summary: GuestVisitSummary | nu
                     <code className="text-xs font-mono text-muted-foreground w-24">{site}</code>
                     <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-cyan-500/60 rounded-full"
+                        className="h-full bg-cyan-600 rounded-full"
                         style={{ width: `${summary.total ? (count / summary.total) * 100 : 0}%` }}
                       />
                     </div>

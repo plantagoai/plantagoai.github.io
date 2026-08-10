@@ -50,8 +50,8 @@ interface ProjectInfo {
 const PROJECTS: ProjectInfo[] = [
   {
     name: "Foundation",
-    color: "text-violet-400",
-    dotColor: "bg-violet-500",
+    color: "text-indigo-700",
+    dotColor: "bg-indigo-500",
     url: "https://foundation-vote.web.app",
     firebaseProject: "solanavote-devnet",
     packages: ["firebase-core", "auth", "legal", "ai", "messaging", "e2e"],
@@ -66,7 +66,7 @@ const PROJECTS: ProjectInfo[] = [
   },
   {
     name: "MarketHub",
-    color: "text-amber-400",
+    color: "text-amber-700",
     dotColor: "bg-amber-500",
     url: null,
     firebaseProject: "markethub",
@@ -81,7 +81,7 @@ const PROJECTS: ProjectInfo[] = [
   },
   {
     name: "HerbPulse",
-    color: "text-emerald-400",
+    color: "text-emerald-700",
     dotColor: "bg-emerald-500",
     url: "https://herbpulse-app.web.app",
     firebaseProject: "herbpulse-app",
@@ -95,7 +95,7 @@ const PROJECTS: ProjectInfo[] = [
   },
   {
     name: "SOHO",
-    color: "text-cyan-400",
+    color: "text-cyan-700",
     dotColor: "bg-cyan-500",
     url: null,
     firebaseProject: "soho-app",
@@ -166,12 +166,15 @@ function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Ambient gradient glow */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/15 rounded-full blur-3xl" />
-        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-violet-500/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-amber-500/8 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 mesh-hero">
+      {/* Same hero band as the public site, so the login screen reads as the
+          same product. The ambient glow it replaces was three blurred tints
+          that only registered against the old near-black canvas. */}
+      <div className="mesh-field" aria-hidden="true">
+        <div className="mesh-blob mesh-blob-1" />
+        <div className="mesh-blob mesh-blob-2" />
+        <div className="mesh-blob mesh-blob-3" />
+        <div className="mesh-blob mesh-blob-4" />
       </div>
 
       <div className="relative max-w-md w-full">
@@ -182,10 +185,10 @@ function AdminLogin() {
         </Link>
 
         {/* Card */}
-        <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl overflow-hidden shadow-2xl shadow-black/40">
-          <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 p-6 border-b border-border">
+        <div className="bg-card border border-border rounded-xl overflow-hidden shadow-elevation-3">
+          <div className="bg-muted/70 p-6 border-b border-border">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-400 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-elevation-2">
                 <Lock className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -210,10 +213,10 @@ function AdminLogin() {
                   const gradient = COLORS[p.colorKey].gradient;
                   return (
                     <div key={p.slug} className="flex flex-col items-center gap-1.5">
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-md shadow-black/20`}>
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-elevation-1`}>
                         <Icon className="w-5 h-5 text-white" />
                       </div>
-                      <span className="text-[10px] font-mono text-muted-foreground/70 tracking-wide truncate w-full text-center">
+                      <span className="text-[10px] font-mono text-muted-foreground tracking-wide truncate w-full text-center">
                         {p.name}
                       </span>
                     </div>
@@ -223,9 +226,9 @@ function AdminLogin() {
             )}
 
             {error && (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
-                <p className="text-sm text-red-400 leading-relaxed">{error}</p>
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
+                <AlertCircle className="w-4 h-4 text-red-700 mt-0.5 shrink-0" />
+                <p className="text-sm text-red-800 leading-relaxed">{error}</p>
               </div>
             )}
 
@@ -252,7 +255,7 @@ function AdminLogin() {
           </div>
         </div>
 
-        <p className="text-center text-xs font-mono text-muted-foreground/60 mt-6 tracking-wider">
+        <p className="text-center text-xs font-mono text-muted-foreground mt-6 tracking-wider">
           Access restricted · Protected by App Check &amp; reCAPTCHA Enterprise
         </p>
       </div>
@@ -268,7 +271,7 @@ function IntegrationMatrix({ projects }: { projects: ProjectInfo[] }) {
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
-        <Package className="w-4 h-4 text-emerald-400" />
+        <Package className="w-4 h-4 text-emerald-700" />
         <h2 className="font-semibold text-sm">Integration Matrix</h2>
       </div>
       <div className="p-4 overflow-x-auto">
@@ -297,7 +300,7 @@ function IntegrationMatrix({ projects }: { projects: ProjectInfo[] }) {
                       {p.packages.includes(pkg) ? (
                         <CheckCircle2 className={`w-3.5 h-3.5 inline ${p.color}`} />
                       ) : (
-                        <span className="text-muted-foreground/20">-</span>
+                        <span className="text-muted-foreground/70">-</span>
                       )}
                     </td>
                   ))}
@@ -374,21 +377,21 @@ function TestSummary({ projects }: { projects: ProjectInfo[] }) {
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
-        <TestTube className="w-4 h-4 text-emerald-400" />
+        <TestTube className="w-4 h-4 text-emerald-700" />
         <h2 className="font-semibold text-sm">Test Summary</h2>
       </div>
       <div className="p-4">
         <div className="grid grid-cols-3 gap-4 text-center mb-4">
-          <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
-            <p className="text-2xl font-semibold text-emerald-400">{totalTests}</p>
+          <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+            <p className="text-2xl font-semibold text-emerald-700">{totalTests}</p>
             <p className="text-xs text-muted-foreground">Unit Tests</p>
           </div>
-          <div className="p-3 rounded-lg bg-violet-500/5 border border-violet-500/10">
-            <p className="text-2xl font-semibold text-violet-400">{totalE2E}</p>
+          <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
+            <p className="text-2xl font-semibold text-indigo-700">{totalE2E}</p>
             <p className="text-xs text-muted-foreground">E2E Specs</p>
           </div>
-          <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
-            <p className="text-2xl font-semibold text-cyan-400">10</p>
+          <div className="p-3 rounded-lg bg-cyan-50 border border-cyan-200">
+            <p className="text-2xl font-semibold text-cyan-700">10</p>
             <p className="text-xs text-muted-foreground">Packages Tested</p>
           </div>
         </div>
@@ -401,7 +404,7 @@ function TestSummary({ projects }: { projects: ProjectInfo[] }) {
                 <code className="text-xs font-mono text-muted-foreground w-24">{pkg}</code>
                 <div className="flex-1 h-2 bg-muted/50 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-emerald-500/60 rounded-full"
+                    className="h-full bg-emerald-600 rounded-full"
                     style={{ width: `${(count / 32) * 100}%` }}
                   />
                 </div>
@@ -487,10 +490,10 @@ function DBOverview({ statuses, projects }: { statuses: Record<string, ProjectSt
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
-        <Database className="w-4 h-4 text-cyan-400" />
+        <Database className="w-4 h-4 text-cyan-700" />
         <h2 className="font-semibold text-sm">DB Overview</h2>
         {projectEntries.length > 0 && (
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 ml-auto">
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 ml-auto">
             LIVE
           </span>
         )}
@@ -548,7 +551,7 @@ function PaymentStatus({ statuses }: { statuses: Record<string, ProjectStatus | 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
-        <CreditCard className="w-4 h-4 text-amber-400" />
+        <CreditCard className="w-4 h-4 text-amber-700" />
         <h2 className="font-semibold text-sm">Payments</h2>
         <span className="text-[10px] font-mono text-muted-foreground ml-auto">MarketHub</span>
       </div>
@@ -559,16 +562,16 @@ function PaymentStatus({ statuses }: { statuses: Record<string, ProjectStatus | 
           </p>
         ) : (
           <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
-              <p className="text-xl font-semibold text-amber-400">{markethub.paymentStats.totalOrders}</p>
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-xl font-semibold text-amber-700">{markethub.paymentStats.totalOrders}</p>
               <p className="text-[10px] text-muted-foreground uppercase">Orders</p>
             </div>
-            <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
-              <p className="text-xl font-semibold text-amber-400">{markethub.paymentStats.activeSubscriptions}</p>
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-xl font-semibold text-amber-700">{markethub.paymentStats.activeSubscriptions}</p>
               <p className="text-[10px] text-muted-foreground uppercase">Active Subs</p>
             </div>
-            <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
-              <p className="text-xl font-semibold text-amber-400">{markethub.paymentStats.totalStores}</p>
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-xl font-semibold text-amber-700">{markethub.paymentStats.totalStores}</p>
               <p className="text-[10px] text-muted-foreground uppercase">Stores</p>
             </div>
           </div>
@@ -593,10 +596,10 @@ function DeletionQueue({ statuses, projects }: { statuses: Record<string, Projec
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
-        <Trash2 className="w-4 h-4 text-red-400" />
+        <Trash2 className="w-4 h-4 text-red-700" />
         <h2 className="font-semibold text-sm">Deletion Queue</h2>
         {totalPending > 0 && (
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 ml-auto">
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 ml-auto">
             {totalPending} pending
           </span>
         )}
@@ -621,7 +624,7 @@ function DeletionQueue({ statuses, projects }: { statuses: Record<string, Projec
                   <span className={`${project?.color || ""} font-medium w-20`}>{r.project}</span>
                   <span className="font-mono text-muted-foreground truncate flex-1">{r.userId?.slice(0, 12)}...</span>
                   {daysLeft !== null && (
-                    <span className={`font-mono ${daysLeft < 7 ? "text-red-400" : "text-muted-foreground"}`}>
+                    <span className={`font-mono ${daysLeft < 7 ? "text-red-700" : "text-muted-foreground"}`}>
                       {daysLeft}d left
                     </span>
                   )}
@@ -663,7 +666,7 @@ function TestRunner() {
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
-        <TestTube className="w-4 h-4 text-emerald-400" />
+        <TestTube className="w-4 h-4 text-emerald-700" />
         <h2 className="font-semibold text-sm">Test Runner</h2>
         {lastRun && (
           <span className="text-[10px] font-mono text-muted-foreground ml-auto flex items-center gap-1">
@@ -685,12 +688,12 @@ function TestRunner() {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 text-center mb-4">
-              <div className="p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
-                <p className="text-xl font-semibold text-emerald-400">{totalPass}</p>
+              <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200">
+                <p className="text-xl font-semibold text-emerald-700">{totalPass}</p>
                 <p className="text-[10px] text-muted-foreground uppercase">Passed</p>
               </div>
-              <div className={`p-2 rounded-lg ${totalFail > 0 ? "bg-red-500/5 border-red-500/10" : "bg-muted/30 border-border"} border`}>
-                <p className={`text-xl font-semibold ${totalFail > 0 ? "text-red-400" : "text-muted-foreground"}`}>{totalFail}</p>
+              <div className={`p-2 rounded-lg ${totalFail > 0 ? "bg-red-50 border-red-200" : "bg-muted/30 border-border"} border`}>
+                <p className={`text-xl font-semibold ${totalFail > 0 ? "text-red-700" : "text-muted-foreground"}`}>{totalFail}</p>
                 <p className="text-[10px] text-muted-foreground uppercase">Failed</p>
               </div>
             </div>
@@ -700,14 +703,14 @@ function TestRunner() {
                 .map(([pkg, r]) => (
                   <div key={pkg} className="flex items-center gap-2 text-xs">
                     {r.fail > 0 ? (
-                      <AlertCircle className="w-3 h-3 text-red-400 shrink-0" />
+                      <AlertCircle className="w-3 h-3 text-red-700 shrink-0" />
                     ) : (
-                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="w-3 h-3 text-emerald-700 shrink-0" />
                     )}
                     <code className="font-mono text-muted-foreground w-24 truncate">{pkg}</code>
-                    <span className="text-emerald-400 font-mono">{r.pass}</span>
-                    {r.fail > 0 && <span className="text-red-400 font-mono">/ {r.fail} fail</span>}
-                    <span className="text-muted-foreground/50 font-mono ml-auto">{r.time}</span>
+                    <span className="text-emerald-700 font-mono">{r.pass}</span>
+                    {r.fail > 0 && <span className="text-red-700 font-mono">/ {r.fail} fail</span>}
+                    <span className="text-muted-foreground font-mono ml-auto">{r.time}</span>
                   </div>
                 ))}
             </div>

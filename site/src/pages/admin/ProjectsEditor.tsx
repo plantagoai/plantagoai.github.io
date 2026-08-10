@@ -104,13 +104,13 @@ export function ProjectsEditor() {
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <GripVertical className="w-4 h-4 text-emerald-400" />
+          <GripVertical className="w-4 h-4 text-emerald-700" />
           <h2 className="font-semibold text-sm">Products Configuration</h2>
           <span className="text-xs text-muted-foreground">({projects.length})</span>
         </div>
         <button
           onClick={() => setCreating(emptyProject())}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/25 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           New Product
@@ -137,9 +137,9 @@ export function ProjectsEditor() {
       </div>
 
       {creating && (
-        <div className="border-t-2 border-emerald-500/30 bg-emerald-500/[0.03]">
+        <div className="border-t-2 border-emerald-200 bg-emerald-500/[0.03]">
           <div className="p-4 border-b border-border flex items-center gap-2">
-            <Plus className="w-4 h-4 text-emerald-400" />
+            <Plus className="w-4 h-4 text-emerald-700" />
             <h3 className="font-semibold text-sm">New Product</h3>
           </div>
           <ProjectForm
@@ -232,8 +232,8 @@ function ProjectRow({
           onClick={toggleEnabled}
           className={`p-1.5 rounded-md transition-colors ${
             project.enabled
-              ? "text-emerald-400 hover:bg-emerald-500/10"
-              : "text-muted-foreground/50 hover:bg-muted"
+              ? "text-emerald-700 hover:bg-emerald-50"
+              : "text-muted-foreground hover:bg-muted"
           }`}
           title={project.enabled ? "Visible on site" : "Hidden from site"}
         >
@@ -320,7 +320,7 @@ function ProjectForm({
   return (
     <div className="p-4 space-y-4">
       {error && (
-        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-1.5">
+        <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1.5">
           {error}
         </p>
       )}
@@ -563,7 +563,7 @@ function ProjectForm({
                 }
                 className={`text-xs font-mono px-2 py-1 rounded border transition-colors ${
                   active
-                    ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
                     : "bg-muted text-muted-foreground border-border hover:text-foreground"
                 }`}
               >
@@ -594,7 +594,7 @@ function ProjectForm({
             <button
               onClick={handleDelete}
               disabled={saving}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors disabled:opacity-50"
             >
               <Trash2 className="w-3.5 h-3.5" />
               Delete
@@ -612,7 +612,7 @@ function ProjectForm({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/25 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             {isNew ? "Create" : "Save"}
@@ -633,4 +633,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputClass =
-  "w-full px-2.5 py-1.5 rounded-md bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/30 transition-colors";
+  "w-full px-2.5 py-1.5 rounded-md bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-200 transition-colors";

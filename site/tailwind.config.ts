@@ -29,13 +29,25 @@ export default {
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'monospace'],
-        sans: ['Inter', 'sans-serif'],
+        // Foundation default edition stack — matches foundation-global.com
+        // and the partners site. Inter stays in the index.css @import as the
+        // cross-platform fallback for non-Apple devices.
+        sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"SF Pro Display"',
+          '"SF Pro Text"',
+          'system-ui',
+          'Inter',
+          'sans-serif',
+        ],
       },
-      borderRadius: { xs: '4px', sm: '8px', md: '12px', lg: '16px', xl: '28px' },
+      // Edition radii: cards land at 14–16px, not the old 28px pill.
+      borderRadius: { xs: '4px', sm: '8px', md: '10px', lg: '14px', xl: '16px', '2xl': '20px' },
       boxShadow: {
-        'elevation-1': '0 1px 2px 0 rgb(0 0 0 / 0.05), 0 1px 3px 0 rgb(0 0 0 / 0.1)',
-        'elevation-2': '0 1px 3px 0 rgb(0 0 0 / 0.08), 0 4px 6px -1px rgb(0 0 0 / 0.1)',
-        'elevation-3': '0 4px 6px -1px rgb(0 0 0 / 0.08), 0 10px 15px -3px rgb(0 0 0 / 0.1)',
+        'elevation-1': '0 1px 3px rgb(0 0 0 / 0.04)',
+        'elevation-2': '0 1px 3px rgb(0 0 0 / 0.06), 0 4px 12px -4px rgb(0 0 0 / 0.06)',
+        'elevation-3': '0 4px 16px -4px rgb(0 0 0 / 0.08), 0 12px 32px -8px rgb(0 0 0 / 0.08)',
       },
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },

@@ -32,7 +32,7 @@ export function SiteSettingsPanel() {
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
-        <Settings2 className="w-4 h-4 text-emerald-400" />
+        <Settings2 className="w-4 h-4 text-emerald-700" />
         <h2 className="font-semibold text-sm">Site Sections</h2>
         <span className="text-xs text-muted-foreground">show/hide on public site</span>
       </div>
@@ -49,7 +49,7 @@ export function SiteSettingsPanel() {
                   <span
                     className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
                       enabled
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : "bg-muted text-muted-foreground border-border"
                     }`}
                   >
@@ -63,8 +63,8 @@ export function SiteSettingsPanel() {
                 disabled={loading || isBusy}
                 className={`p-2 rounded-md transition-colors disabled:opacity-50 ${
                   enabled
-                    ? "text-emerald-400 hover:bg-emerald-500/10"
-                    : "text-muted-foreground/60 hover:bg-muted"
+                    ? "text-emerald-700 hover:bg-emerald-50"
+                    : "text-muted-foreground hover:bg-muted"
                 }`}
                 title={enabled ? "Hide on public site" : "Show on public site"}
               >
