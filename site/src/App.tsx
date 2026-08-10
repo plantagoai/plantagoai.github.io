@@ -14,6 +14,7 @@ import {
   AudioLines,
   Wallet,
   ShoppingCart,
+  Sparkles,
 } from "lucide-react";
 import { useState, useEffect, type FormEvent } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
@@ -100,10 +101,27 @@ const sharedPackages: SharedPackage[] = [
 
 function Nav() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const navLinks = useNavLinks();
 
+  // At rest the bar is transparent so the mesh band reads as one surface
+  // (as on foundation-global.com); it only picks up a canvas + hairline
+  // once it detaches and starts overlapping content.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
+    <header
+      className={`sticky top-0 z-50 transition-colors ${
+        scrolled || open
+          ? "bg-background/85 backdrop-blur border-b border-border"
+          : "bg-transparent border-b border-transparent"
+      }`}
+    >
       <div className="max-w-5xl mx-auto flex items-center justify-between px-4 h-14">
         <a href="#" className="flex items-center gap-2.5">
           <img
@@ -120,7 +138,7 @@ function Nav() {
             <a
               key={link.href}
               href={link.href}
-              className="text-base text-muted-foreground hover:text-foreground transition-colors"
+              className="text-base font-medium text-foreground/75 hover:text-foreground transition-colors"
             >
               {link.label}
             </a>
@@ -144,7 +162,7 @@ function Nav() {
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
-              className="block text-base text-muted-foreground hover:text-foreground py-1.5"
+              className="block text-base font-medium text-foreground/75 hover:text-foreground py-1.5"
             >
               {link.label}
             </a>
@@ -155,35 +173,88 @@ function Nav() {
   );
 }
 
-function Hero() {
+/* Hero stats. Foundation's hero pairs the pillar headline with a row of
+   white stat cards (ZK / 1:1 / 0.4s); these are the PlantagoAI equivalents,
+   carrying the copy that used to sit in the mono one-liner underneath.
+
+   Only "1 shared platform" is a constant — it is the claim itself, not a
+   count. The other two are derived from the same data the rest of the page
+   renders, so a package added to the Platform section or a product toggled
+   in /admin can't leave a stale number in the hero. */
+function useHeroStats(projects: Project[], loading: boolean) {
+  // useProjects() starts at [] before the Firestore snapshot lands; counting
+  // that would flash a confident "0". Show a placeholder until it resolves.
+  const visibleProducts = projects.filter((p) => p.enabled).length;
+  const pending = loading ? "—" : null;
+
+  return [
+    {
+      value: "1",
+      label: "Shared platform",
+      note: "Built once, reused everywhere",
+      tone: "text-emerald-700",
+    },
+    {
+      value: String(sharedPackages.length),
+      label: "TypeScript packages",
+      note: "Auth, payments, AI, compliance",
+      tone: "text-teal-700",
+    },
+    {
+      value: pending ?? String(visibleProducts),
+      label: visibleProducts === 1 && !pending ? "Product in parallel" : "Products in parallel",
+      note: "No corners cut on the basics",
+      tone: "text-cyan-700",
+    },
+  ];
+}
+
+function Hero({ projects, loading }: { projects: Project[]; loading: boolean }) {
+  const heroStats = useHeroStats(projects, loading);
+
   return (
-    <section className="text-center space-y-6 py-16 md:py-24">
-      <h1 className="text-5xl md:text-7xl font-light tracking-wide leading-tight">
-        <span className="block w-fit mx-auto text-left">
-          <span className="block text-foreground">Your</span>
-          <span className="flex items-center gap-3 text-indigo-400">
-            <AudioLines className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
-            Voice.
-          </span>
-          <span className="flex items-center gap-3 text-teal-400">
-            <Wallet className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
-            Share.
-          </span>
-          <span className="flex items-center gap-3 text-cyan-400">
-            <ShoppingCart className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
-            Market.
-          </span>
+    <section className="pt-10 pb-14 md:pt-16 md:pb-20">
+      <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 backdrop-blur px-3.5 py-1.5 text-sm font-medium text-foreground/80">
+        <Sparkles className="w-4 h-4 text-primary" />
+        Shared AI and identity infrastructure
+      </p>
+
+      <h1 className="mt-6 text-5xl md:text-7xl font-semibold leading-[1.05]">
+        <span className="block text-foreground">Your</span>
+        <span className="flex items-center gap-3 text-indigo-600">
+          <AudioLines className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
+          Voice.
+        </span>
+        <span className="flex items-center gap-3 text-teal-700">
+          <Wallet className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
+          Share.
+        </span>
+        <span className="flex items-center gap-3 text-cyan-700">
+          <ShoppingCart className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
+          Market.
         </span>
       </h1>
-      <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed pt-4">
+
+      <p className="mt-7 text-lg text-muted-foreground max-w-2xl leading-relaxed">
         The core shared AI and identity infrastructure for verified-human ecosystems —
         twelve TypeScript packages handling auth, payments, AI with prompt caching,
         i18n, compliance, and testing.
       </p>
-      <p className="text-sm font-mono text-muted-foreground/60 tracking-wide">
-        one shared platform · 12 packages · reused across every product
-      </p>
-      <div className="flex items-center justify-center gap-3 pt-4">
+
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl">
+        {heroStats.map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-lg border border-border bg-card px-4 py-3.5 shadow-elevation-1"
+          >
+            <p className={`text-2xl font-semibold ${stat.tone}`}>{stat.value}</p>
+            <p className="text-sm font-medium text-foreground mt-0.5">{stat.label}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{stat.note}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 pt-8">
         <a
           href="#products"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-base font-medium hover:opacity-90 transition-opacity"
@@ -193,7 +264,7 @@ function Hero() {
         </a>
         <a
           href="#contact"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border text-base font-medium hover:bg-muted transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-card text-base font-medium hover:bg-muted transition-colors"
         >
           Get in Touch
         </a>
@@ -206,8 +277,8 @@ function About() {
   return (
     <section id="about" className="scroll-mt-20">
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 p-5 border-b border-border">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-1">
+        <div className="bg-muted/70 p-5 border-b border-border">
+          <p className="eyebrow mb-2">
             About
           </p>
           <h2 className="font-semibold text-lg text-foreground">
@@ -228,29 +299,29 @@ function About() {
             identity, AI, and compliance primitives.
           </p>
           <div className="grid md:grid-cols-4 gap-3">
-            <div className="p-4 rounded-md bg-violet-500/5 border border-violet-500/10">
-              <p className="text-sm font-semibold text-violet-400 mb-1">Verified-Human Identity</p>
+            <div className="p-4 rounded-md bg-indigo-50 border border-indigo-200">
+              <p className="text-sm font-semibold text-indigo-700 mb-1">Verified-Human Identity</p>
               <p className="text-sm text-muted-foreground">
                 ZK identity primitives via Self Protocol passport verification.
                 Sybil-resistant attestation reused across downstream products.
               </p>
             </div>
-            <div className="p-4 rounded-md bg-emerald-500/5 border border-emerald-500/10">
-              <p className="text-sm font-semibold text-emerald-400 mb-1">AI Layer</p>
+            <div className="p-4 rounded-md bg-emerald-50 border border-emerald-200">
+              <p className="text-sm font-semibold text-emerald-700 mb-1">AI Layer</p>
               <p className="text-sm text-muted-foreground">
                 Anthropic Claude with prompt caching as shared infrastructure.
                 Cost-efficient LLM workloads, usage tracking, multi-tenant.
               </p>
             </div>
-            <div className="p-4 rounded-md bg-cyan-500/5 border border-cyan-500/10">
-              <p className="text-sm font-semibold text-cyan-400 mb-1">Governance & Distribution</p>
+            <div className="p-4 rounded-md bg-cyan-50 border border-cyan-200">
+              <p className="text-sm font-semibold text-cyan-700 mb-1">Governance & Distribution</p>
               <p className="text-sm text-muted-foreground">
                 On-chain governance and verified-human payouts on Solana via
                 Anchor and Rust. Auditable, sybil-resistant, anonymous voting.
               </p>
             </div>
-            <div className="p-4 rounded-md bg-amber-500/5 border border-amber-500/10">
-              <p className="text-sm font-semibold text-amber-400 mb-1">Web2 ↔ Web3 Bridge</p>
+            <div className="p-4 rounded-md bg-amber-50 border border-amber-200">
+              <p className="text-sm font-semibold text-amber-700 mb-1">Web2 ↔ Web3 Bridge</p>
               <p className="text-sm text-muted-foreground">
                 Scalable backend services bridging Cloud Functions and Firestore
                 with Solana on-chain programs. Reusable across products.
@@ -269,22 +340,27 @@ function ProjectCard({ project }: { project: Project }) {
   const badgeClass = STATUS_BADGE_CLASSES[project.statusKind];
 
   return (
-    <div className={`bg-card border ${palette.borderColor} rounded-xl overflow-hidden`}>
-      {/* Header */}
-      <div className={`bg-gradient-to-r ${palette.gradient} p-6 flex items-center gap-4`}>
-        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-elevation-1">
+      {/* Header. The edition puts the accent on the icon tile and a hairline
+          rule, not a full-bleed gradient band — a saturated band per card was
+          the loudest thing separating this page from every other Foundation
+          surface, and it forced white-on-colour text for the title and badge. */}
+      <div className="p-6 flex items-center gap-4 border-b border-border">
+        <div
+          className={`w-12 h-12 shrink-0 bg-gradient-to-br ${palette.gradient} rounded-lg flex items-center justify-center shadow-elevation-1`}
+        >
           <Icon className="w-6 h-6 text-white" />
         </div>
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-white font-semibold text-xl">{project.name}</h3>
+            <h3 className="text-foreground font-semibold text-xl">{project.name}</h3>
             {project.statusText && (
               <span className={`text-xs font-mono px-2 py-0.5 rounded border ${badgeClass}`}>
                 {project.statusText}
               </span>
             )}
           </div>
-          <p className="text-white/80 text-base mt-0.5">{project.subtitle}</p>
+          <p className="text-muted-foreground text-base mt-0.5">{project.subtitle}</p>
         </div>
       </div>
 
@@ -398,10 +474,10 @@ function Projects({ projects }: { projects: Project[] }) {
   return (
     <section id="products" className="space-y-6 scroll-mt-20">
       <div className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-1">
+        <p className="eyebrow mb-2">
           Portfolio
         </p>
-        <h2 className="text-2xl font-light tracking-wide text-foreground/80">
+        <h2 className="text-3xl md:text-4xl font-semibold text-foreground">
           Current Products
         </h2>
       </div>
@@ -433,10 +509,10 @@ function Releases({ projects }: { projects: Project[] }) {
   return (
     <section id="releases" className="scroll-mt-20 space-y-6">
       <div className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-1">
+        <p className="eyebrow mb-2">
           Releases
         </p>
-        <h2 className="text-2xl font-light tracking-wide text-foreground/80">
+        <h2 className="text-3xl md:text-4xl font-semibold text-foreground">
           Latest Releases
         </h2>
       </div>
@@ -499,10 +575,10 @@ function Platform({ projects }: { projects: Project[] }) {
   return (
     <section id="platform" className="scroll-mt-20 space-y-6">
       <div className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-1">
+        <p className="eyebrow mb-2">
           Platform
         </p>
-        <h2 className="text-2xl font-light tracking-wide text-foreground/80">
+        <h2 className="text-3xl md:text-4xl font-semibold text-foreground">
           @plantagoai — Shared Infrastructure
         </h2>
         <p className="text-base text-muted-foreground max-w-2xl mx-auto mt-3 leading-relaxed">
@@ -513,8 +589,8 @@ function Platform({ projects }: { projects: Project[] }) {
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="bg-gradient-to-r from-slate-500/10 via-slate-500/5 to-slate-500/10 p-5 border-b border-border">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-1">
+        <div className="bg-muted/70 p-5 border-b border-border">
+          <p className="eyebrow mb-2">
             Packages
           </p>
           <h3 className="font-semibold text-lg text-foreground">
@@ -527,7 +603,7 @@ function Platform({ projects }: { projects: Project[] }) {
               key={pkg.name}
               className={`p-4 rounded-md border ${
                 pkg.highlight
-                  ? "bg-emerald-500/5 border-emerald-500/20"
+                  ? "bg-emerald-50 border-emerald-200"
                   : "bg-muted/30 border-border"
               }`}
             >
@@ -536,7 +612,7 @@ function Platform({ projects }: { projects: Project[] }) {
                   @plantagoai/{pkg.name}
                 </code>
                 {pkg.highlight && (
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 tracking-wider">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 tracking-wider">
                     NOTABLE
                   </span>
                 )}
@@ -545,7 +621,7 @@ function Platform({ projects }: { projects: Project[] }) {
                 {pkg.purpose}
               </p>
               {pkg.highlight && (
-                <p className="text-xs text-emerald-400 mt-2 italic leading-relaxed">
+                <p className="text-xs text-emerald-700 mt-2 italic leading-relaxed">
                   {pkg.highlight}
                 </p>
               )}
@@ -555,8 +631,8 @@ function Platform({ projects }: { projects: Project[] }) {
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="bg-gradient-to-r from-slate-500/10 via-slate-500/5 to-slate-500/10 p-5 border-b border-border">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-1">
+        <div className="bg-muted/70 p-5 border-b border-border">
+          <p className="eyebrow mb-2">
             Reuse
           </p>
           <h3 className="font-semibold text-lg text-foreground">
@@ -599,7 +675,7 @@ function Platform({ projects }: { projects: Project[] }) {
                               className={`w-4 h-4 inline ${COLORS[p.colorKey].checkColor}`}
                             />
                           ) : (
-                            <span className="text-muted-foreground/25">—</span>
+                            <span className="text-muted-foreground/70">—</span>
                           )}
                         </td>
                       );
@@ -616,10 +692,10 @@ function Platform({ projects }: { projects: Project[] }) {
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-cyan-500/5 border border-border rounded-xl p-5">
+      <div className="bg-card border border-border rounded-xl p-5 shadow-elevation-1">
         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
           <div className="flex items-center gap-2">
-            <Github className="w-5 h-5 text-emerald-400 shrink-0" />
+            <Github className="w-5 h-5 text-emerald-600 shrink-0" />
             <h3 className="font-semibold text-base text-foreground">
               Currently a private monorepo
             </h3>
@@ -640,8 +716,8 @@ function Founder() {
   return (
     <section id="founder" className="scroll-mt-20">
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="bg-gradient-to-r from-indigo-500/10 via-violet-500/10 to-purple-500/10 p-5 border-b border-border">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-1">
+        <div className="bg-muted/70 p-5 border-b border-border">
+          <p className="eyebrow mb-2">
             Founder
           </p>
           <h2 className="font-semibold text-lg text-foreground">Dagan Gilat</h2>
@@ -657,24 +733,24 @@ function Founder() {
             product strategy.
           </p>
           <div className="grid md:grid-cols-3 gap-3">
-            <div className="p-4 rounded-md bg-indigo-500/5 border border-indigo-500/10">
-              <p className="text-sm font-semibold text-indigo-400 mb-1">Distributed Systems & Cloud</p>
+            <div className="p-4 rounded-md bg-indigo-50 border border-indigo-200">
+              <p className="text-sm font-semibold text-indigo-700 mb-1">Distributed Systems & Cloud</p>
               <p className="text-sm text-muted-foreground">
                 Senior Manager, Cloud Platforms at IBM Research (OpenStack, virtualization,
                 storage, networking). CTO Machine Learning at Toga Networks. Microservices,
                 gRPC, Kubernetes — Rust and Go.
               </p>
             </div>
-            <div className="p-4 rounded-md bg-violet-500/5 border border-violet-500/10">
-              <p className="text-sm font-semibold text-violet-400 mb-1">Blockchain & Solana</p>
+            <div className="p-4 rounded-md bg-indigo-50 border border-indigo-200">
+              <p className="text-sm font-semibold text-indigo-700 mb-1">Blockchain & Solana</p>
               <p className="text-sm text-muted-foreground">
                 Verified-human governance and identity on Solana. On-chain programs in
                 Anchor / Rust; off-chain in Cloud Functions and Firestore. Earlier: PKI and
                 core network functions at HyperMesh.
               </p>
             </div>
-            <div className="p-4 rounded-md bg-emerald-500/5 border border-emerald-500/10">
-              <p className="text-sm font-semibold text-emerald-400 mb-1">Applied AI & ML</p>
+            <div className="p-4 rounded-md bg-emerald-50 border border-emerald-200">
+              <p className="text-sm font-semibold text-emerald-700 mb-1">Applied AI & ML</p>
               <p className="text-sm text-muted-foreground">
                 Anthropic Claude with prompt caching as shared infrastructure across products.
                 Earlier: reinforcement-learning and deep-learning auto-scaling productized at
@@ -748,8 +824,8 @@ function ContactForm({ projects }: { projects: Project[] }) {
   return (
     <section id="contact" className="scroll-mt-20">
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 p-5 border-b border-border">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-1">
+        <div className="bg-muted/70 p-5 border-b border-border">
+          <p className="eyebrow mb-2">
             Contact
           </p>
           <h2 className="font-semibold text-lg text-foreground">Get in Touch</h2>
@@ -767,7 +843,7 @@ function ContactForm({ projects }: { projects: Project[] }) {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition-colors"
+                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-colors"
                 placeholder="Your name"
               />
             </div>
@@ -781,7 +857,7 @@ function ContactForm({ projects }: { projects: Project[] }) {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition-colors"
+                className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-colors"
                 placeholder="you@example.com"
               />
             </div>
@@ -812,14 +888,14 @@ function ContactForm({ projects }: { projects: Project[] }) {
 
           <div>
             <label htmlFor="contact-message" className="block text-sm font-medium text-muted-foreground mb-1.5">
-              Message <span className="text-muted-foreground/60 font-normal">(optional)</span>
+              Message <span className="text-muted-foreground font-normal">(optional)</span>
             </label>
             <textarea
               id="contact-message"
               rows={4}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition-colors resize-none"
+              className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-colors resize-none"
               placeholder="Tell us about your project or idea..."
             />
           </div>
@@ -837,10 +913,10 @@ function ContactForm({ projects }: { projects: Project[] }) {
               {status === "sending" ? "Sending..." : status === "sent" ? "Sent!" : status === "error" ? "Try Again" : "Send Message"}
             </button>
             {status === "sent" && (
-              <p className="text-sm text-emerald-400">Thank you! We'll get back to you soon.</p>
+              <p className="text-sm text-emerald-700">Thank you! We'll get back to you soon.</p>
             )}
             {status === "error" && (
-              <p className="text-sm text-red-400">Something went wrong. Please try again.</p>
+              <p className="text-sm text-destructive">Something went wrong. Please try again.</p>
             )}
           </div>
         </form>
@@ -874,11 +950,11 @@ function Newsletter() {
 
   return (
     <section className="scroll-mt-20">
-      <div className="bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-cyan-500/5 border border-border rounded-xl p-6">
+      <div className="bg-card border border-border rounded-xl p-6 shadow-elevation-1">
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <Mail className="w-5 h-5 text-emerald-400" />
+              <Mail className="w-5 h-5 text-emerald-600" />
               <h3 className="font-semibold text-base text-foreground">Stay Updated</h3>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -888,7 +964,7 @@ function Newsletter() {
 
           <form onSubmit={handleSubscribe} className="flex items-center gap-2 min-w-0 md:w-auto w-full">
             {status === "subscribed" ? (
-              <p className="text-sm text-emerald-400 flex items-center gap-1.5">
+              <p className="text-sm text-emerald-700 flex items-center gap-1.5">
                 <CheckCheck className="w-4 h-4" />
                 Subscribed! You'll hear from us soon.
               </p>
@@ -900,12 +976,12 @@ function Newsletter() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="flex-1 md:w-60 px-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition-colors text-sm"
+                  className="flex-1 md:w-60 px-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-colors text-sm"
                 />
                 <button
                   type="submit"
                   disabled={status === "sending"}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 transition-colors disabled:opacity-50 whitespace-nowrap"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
                 >
                   {status === "sending" ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -919,7 +995,7 @@ function Newsletter() {
           </form>
         </div>
         {status === "error" && (
-          <p className="text-sm text-red-400 mt-2">Something went wrong. Please try again.</p>
+          <p className="text-sm text-destructive mt-2">Something went wrong. Please try again.</p>
         )}
       </div>
     </section>
@@ -952,7 +1028,7 @@ function Footer() {
 }
 
 export function App() {
-  const { projects } = useProjects();
+  const { projects, loading } = useProjects();
   const { settings } = useSiteSettings();
 
   useEffect(() => {
@@ -960,10 +1036,19 @@ export function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background mesh-hero">
+      {/* Foundation's signature hero band: a clipped pastel field with four
+          drifting blurred blobs. Sits behind the nav and hero, ends on the
+          diagonal. Honours prefers-reduced-motion (see index.css). */}
+      <div className="mesh-field" aria-hidden="true">
+        <div className="mesh-blob mesh-blob-1" />
+        <div className="mesh-blob mesh-blob-2" />
+        <div className="mesh-blob mesh-blob-3" />
+        <div className="mesh-blob mesh-blob-4" />
+      </div>
       <Nav />
       <main className="p-6 lg:p-8 max-w-5xl mx-auto space-y-10 animate-fade-in">
-        <Hero />
+        <Hero projects={projects} loading={loading} />
         <About />
         <Projects projects={projects} />
         {settings.releasesEnabled && <Releases projects={projects} />}

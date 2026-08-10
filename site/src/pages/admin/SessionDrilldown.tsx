@@ -143,12 +143,12 @@ export function SessionDrilldown<T extends { ts: string; country: string | null;
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400">
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {error}
         </div>
       )}
       {truncated && (
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           Truncated at 5,000 rows — narrow the date range for a complete view.
         </div>

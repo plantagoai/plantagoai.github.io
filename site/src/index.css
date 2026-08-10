@@ -4,50 +4,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Foundation default edition — "Apple light" design tokens.
+
+   Same visual language as foundation-global.com and the partners
+   site (yc-site): canvas #fbfbfd, cards #fff on a #e5e5e7 hairline,
+   ink #1d1d1f, muted #6e6e73, CTA blue #0071e3. Values are
+   hardcoded here — plantagoai-site does not depend on
+   @plantagoai/editions, so there are no resolved brand tokens to
+   read from. If that package is ever added, these are the vars to
+   drive.
+
+   The site is light-committed: there is no `.dark` block and
+   nothing toggles a dark class (index.html no longer sets one).
+   Both the marketing page and /admin read from these tokens.
+   ============================================================ */
 @layer base {
   :root {
-    --primary: 220 80% 44%;
-    --primary-foreground: 220 100% 98%;
-    --secondary: 220 20% 92%;
-    --secondary-foreground: 220 20% 20%;
-    --accent: 280 40% 92%;
-    --accent-foreground: 280 40% 20%;
-    --destructive: 0 75% 42%;
-    --destructive-foreground: 0 100% 98%;
-    --background: 220 20% 98%;
-    --foreground: 220 20% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --primary: 210 100% 45%;          /* #0071e3 — CTA blue */
+    --primary-foreground: 0 0% 100%;  /* white — never ink on blue */
+    --secondary: 240 8% 95%;          /* #f1f1f3 fill */
+    --secondary-foreground: 240 3% 12%;
+    --accent: 210 100% 97%;           /* #f0f6ff blue wash */
+    --accent-foreground: 210 100% 33%;/* #0059a8 — passes on the wash */
+    --destructive: 354 100% 42%;      /* #d70015 */
+    --destructive-foreground: 0 0% 100%;
+    --background: 240 33% 99%;        /* #fbfbfd canvas */
+    --foreground: 240 3% 12%;         /* #1d1d1f ink */
+    --card: 0 0% 100%;                /* #ffffff */
+    --card-foreground: 240 3% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
-    --muted: 220 15% 95%;
-    --muted-foreground: 220 10% 40%;
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 220 80% 44%;
-    --radius: 0.75rem;
-  }
-
-  .dark {
-    --primary: 220 80% 72%;
-    --primary-foreground: 220 80% 16%;
-    --secondary: 220 15% 22%;
-    --secondary-foreground: 220 15% 90%;
-    --accent: 280 30% 22%;
-    --accent-foreground: 280 30% 90%;
-    --destructive: 0 65% 70%;
-    --destructive-foreground: 0 80% 12%;
-    --background: 220 15% 8%;
-    --foreground: 220 10% 92%;
-    --card: 220 15% 11%;
-    --card-foreground: 220 10% 92%;
-    --popover: 220 15% 11%;
-    --popover-foreground: 220 10% 92%;
-    --muted: 220 15% 16%;
-    --muted-foreground: 220 10% 65%;
-    --border: 220 10% 20%;
-    --input: 220 10% 20%;
-    --ring: 220 80% 72%;
+    --popover-foreground: 240 3% 12%;
+    --muted: 240 11% 96%;             /* #f5f5f7 */
+    --muted-foreground: 240 2% 44%;   /* #6e6e73 */
+    --border: 240 4% 90%;             /* #e5e5e7 hairline */
+    --input: 240 4% 90%;
+    --ring: 210 100% 45%;
+    --radius: 0.875rem;               /* 14px */
   }
 }
 
@@ -60,6 +53,33 @@
   }
   pre, code {
     @apply font-mono;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  h1 {
+    letter-spacing: -0.022em;
+  }
+  ::selection {
+    background: #d7e6ff;
+    color: #1d1d1f;
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  /* Small uppercase label above a heading — the Foundation eyebrow. */
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
   }
 }
 
@@ -83,3 +103,61 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
 }
+
+/* ── Foundation v2 light system (2026-08-09 redesign) ─────────────────
+   Gradient wordmark + mesh hero. These are brand-level constants (the
+   app's per-tenant edition vars don't apply to a marketing site), and
+   match foundation-global.com and partners.foundation-global.com. */
+.edition-gradient {
+  background-image: linear-gradient(100deg, #34d399, #22d3ee 45%, #60a5fa 75%, #a78bfa);
+}
+
+/* No `overflow: hidden` here, unlike the yc-site original: the sticky nav is
+   a child of this element, and an `overflow` ancestor silently kills
+   `position: sticky`. `.mesh-field` already clips its own blobs, so the
+   outer clip was only belt-and-braces. */
+.mesh-hero { position: relative; }
+.mesh-field {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 430px;
+  clip-path: polygon(0 0, 100% 0, 100% 62%, 0 100%);
+  background: #e8fbf4;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* Scrim. Without this the band is a full-strength wash edge to edge, and the
+   nav links (#6e6e73) plus the indigo/teal headline land on saturated cyan at
+   roughly 2:1. foundation-global.com only ever shows the mesh at full strength
+   along the top edge, with the copy sitting on the pale part. The scrim
+   reproduces that: opaque canvas at the bottom, clear at the very top. */
+.mesh-field::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgb(251 251 253 / 0.15) 0%,
+    rgb(251 251 253 / 0.62) 45%,
+    rgb(251 251 253 / 0.88) 100%
+  );
+}
+.mesh-blob { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .85; }
+.mesh-blob-1 { width: 560px; height: 560px; background: #34d399; top: -220px; left: -80px;  animation: mesh-drift 24s ease-in-out infinite alternate; }
+.mesh-blob-2 { width: 520px; height: 520px; background: #22d3ee; top: -140px; left: 30%;    animation: mesh-drift 30s ease-in-out infinite alternate-reverse; }
+.mesh-blob-3 { width: 560px; height: 560px; background: #60a5fa; top: -200px; right: -60px; animation: mesh-drift 27s ease-in-out infinite alternate; }
+.mesh-blob-4 { width: 420px; height: 420px; background: #a78bfa; top: 60px;   right: 18%; opacity: .8; animation: mesh-drift 21s ease-in-out infinite alternate-reverse; }
+@keyframes mesh-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(90px, 50px) scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mesh-blob { animation: none; }
+}
+/* Lift real content above the field. `header` is excluded on purpose: this
+   selector is specificity (0,3,0) and would otherwise beat Tailwind's
+   `.sticky` at (0,1,0), silently replacing the nav's `position: sticky` with
+   `position: relative`. (Verified: without the :not(header) the header
+   computed to position:relative and scrolled away.) The header carries its
+   own z-50, so it still paints above the field. */
+.mesh-hero > :not(.mesh-field):not(header) { position: relative; z-index: 1; }
