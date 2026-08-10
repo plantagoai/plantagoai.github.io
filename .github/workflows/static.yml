@@ -87,8 +87,21 @@ jobs:
         env:
           SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PLANTAGOAI }}
         run: |
+          set -euo pipefail
+          # An unset secret expands to "", which writes an empty credentials
+          # file and makes firebase-tools report "Failed to authenticate, have
+          # you run firebase login?" — a message that sends you looking at the
+          # CLI instead of at the missing secret. Say what is actually wrong.
+          if [ -z "${SA_JSON:-}" ]; then
+            echo "::error::Secret FIREBASE_SERVICE_ACCOUNT_PLANTAGOAI is empty or not set. Add it under Settings → Secrets and variables → Actions (service-account JSON for the plantagoai project, Firebase Hosting Admin)."
+            exit 1
+          fi
           printf '%s' "$SA_JSON" > "$RUNNER_TEMP/sa.json"
           chmod 600 "$RUNNER_TEMP/sa.json"
+          if ! python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d.get('project_id')=='plantagoai' else 1)" "$RUNNER_TEMP/sa.json" 2>/dev/null; then
+            echo "::error::Service-account JSON is malformed, or its project_id is not 'plantagoai'. dagangilat.com is served by the plantagoai project."
+            exit 1
+          fi
 
       - name: Deploy hosting → prod
         env:
