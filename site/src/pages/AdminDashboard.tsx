@@ -22,6 +22,7 @@ import { ProjectsEditor } from "./admin/ProjectsEditor";
 import { SiteSettingsPanel } from "./admin/SiteSettingsPanel";
 import { seedDefaultsIfEmpty, useProjects, getIconComponent, COLORS } from "../lib/projects";
 import { logAdminLogin } from "../lib/analytics";
+import { markAdminBrowser } from "../lib/track";
 import { AnalyticsPanel } from "./admin/AnalyticsPanel";
 
 // ---------------------------------------------------------------------------
@@ -137,6 +138,7 @@ function useAdmin() {
     if (isAdmin && user && loggedUidRef.current !== user.uid) {
       loggedUidRef.current = user.uid;
       logAdminLogin(user).catch(() => {});
+      markAdminBrowser();
     }
     if (!user) loggedUidRef.current = null;
   }, [isAdmin, user]);

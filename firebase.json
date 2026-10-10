@@ -18,6 +18,10 @@
           "function": { "functionId": "logGuestVisitFn", "region": "us-east1" }
         },
         {
+          "source": "/api/track",
+          "function": { "functionId": "trackFn", "region": "us-east1" }
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }

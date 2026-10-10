@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, Send } from "lucide-react";
 import { sendChat, type ChatMessage } from "../lib/api";
+import { track } from "../lib/track";
 
 const SUGGESTIONS = [
   "What is Foundation?",
@@ -28,6 +29,7 @@ export default function Chat() {
     setMessages(next);
     setDraft("");
     setBusy(true);
+    track("chat");
     try {
       const reply = await sendChat(next);
       setMessages([...next, { role: "assistant", content: reply }]);

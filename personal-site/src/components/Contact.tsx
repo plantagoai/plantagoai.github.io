@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Send, CircleCheck } from "lucide-react";
 import { sendContact } from "../lib/api";
+import { track } from "../lib/track";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -17,6 +18,7 @@ export default function Contact() {
     setError("");
     try {
       await sendContact({ name, email, message });
+      track("contact");
       setStatus("sent");
       setName("");
       setEmail("");

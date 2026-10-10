@@ -10,6 +10,7 @@ import {
   type GuestVisitRow,
   type GuestVisitSummary,
 } from "./analyticsSummary";
+import type { VisitEvent } from "./visitAnalytics";
 
 export {
   summarizeAdminLogins,
@@ -22,7 +23,11 @@ export {
 };
 
 // ---------------------------------------------------------------------------
-// Admin panel login analytics + guest browsing analytics
+// Admin panel login analytics + legacy guest browsing analytics
+//
+// Visitor tracking itself moved to src/lib/track.ts → POST /api/track
+// (analyticsEvents); guest_visits is no longer written and is read only
+// for its history. fetchVisitEvents below feeds Admin → Visitors.
 //
 // Both are logged and read exclusively through Cloud Functions now (see
 // functions/analytics.js), not direct client Firestore calls — the real
@@ -40,18 +45,6 @@ export async function logAdminLogin(_user: User): Promise<void> {
   // from the caller's own ID token, not a client-supplied value.
   const fn = httpsCallable(fns, "logAdminLoginFn");
   await fn({});
-}
-
-export async function logGuestVisit(site: GuestSite, path: string = "/"): Promise<void> {
-  try {
-    await fetch("/api/logGuestVisit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ site, path: path.slice(0, 500) }),
-    });
-  } catch {
-    // Analytics must never break the site for a visitor — swallow silently.
-  }
 }
 
 interface SessionRow {
@@ -119,5 +112,27 @@ export async function fetchGuestVisitRows(fromMs: number, toMs: number): Promise
         city: r.city,
       })),
     truncated: meta.truncated,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Admin → Visitors: raw analyticsEvents for a range (see functions/analytics.js
+// getAnalyticsEvents). Aggregated client-side by src/lib/visitAnalytics.ts.
+// ---------------------------------------------------------------------------
+
+type WireVisitEvent = Omit<VisitEvent, "ts"> & { ts: string | null };
+
+const getAnalyticsEventsFn = httpsCallable<
+  { from: string; to: string },
+  { events: WireVisitEvent[]; capped: boolean }
+>(fns, "getAnalyticsEvents");
+
+export async function fetchVisitEvents(from: Date, to: Date): Promise<{ events: VisitEvent[]; capped: boolean }> {
+  const { data } = await getAnalyticsEventsFn({ from: from.toISOString(), to: to.toISOString() });
+  return {
+    events: data.events
+      .filter((e): e is WireVisitEvent & { ts: string } => e.ts != null)
+      .map((e) => ({ ...e, ts: new Date(e.ts) })),
+    capped: data.capped,
   };
 }

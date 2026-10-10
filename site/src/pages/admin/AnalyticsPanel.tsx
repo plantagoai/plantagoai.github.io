@@ -11,6 +11,7 @@ import {
   type GuestVisitRow,
 } from "../../lib/analytics";
 import { SessionDrilldown } from "./SessionDrilldown";
+import { VisitorAnalytics } from "./VisitorAnalytics";
 
 type AdminLoginRowWithTs = AdminLoginRow & { ts: string };
 type GuestVisitRowWithTs = GuestVisitRow & { ts: string };
@@ -97,7 +98,7 @@ function GuestVisitsCard({ summary, loading }: { summary: GuestVisitSummary | nu
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
         <UsersIcon className="w-4 h-4 text-cyan-700" />
-        <h2 className="font-semibold text-sm">Guest Visits</h2>
+        <h2 className="font-semibold text-sm">Page-load log (legacy)</h2>
         {loading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground ml-2" />}
         <button
           onClick={() => setExpanded((v) => !v)}
@@ -108,7 +109,7 @@ function GuestVisitsCard({ summary, loading }: { summary: GuestVisitSummary | nu
       </div>
       <div className="p-4">
         {!summary || summary.total === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">No visits recorded yet</p>
+          <p className="text-sm text-muted-foreground text-center py-4">No legacy page loads in the last 30 days</p>
         ) : (
           <>
             <div className="grid grid-cols-3 gap-3 text-center mb-4">
@@ -191,9 +192,14 @@ export function AnalyticsPanel() {
   }, []);
 
   return (
-    <div className="grid md:grid-cols-2 gap-4">
-      <AdminLoginsCard summary={loginSummary} loading={loading} />
-      <GuestVisitsCard summary={visitSummary} loading={loading} />
+    <div className="space-y-4">
+      <VisitorAnalytics />
+      <div className="grid md:grid-cols-2 gap-4">
+        <AdminLoginsCard summary={loginSummary} loading={loading} />
+        {/* guest_visits is no longer written (Visitors above replaced it);
+            kept so its history stays visible until it ages out. */}
+        <GuestVisitsCard summary={visitSummary} loading={loading} />
+      </div>
     </div>
   );
 }

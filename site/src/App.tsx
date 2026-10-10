@@ -27,7 +27,7 @@ import {
   type Project,
 } from "./lib/projects";
 import { useSiteSettings } from "./lib/siteSettings";
-import { logGuestVisit } from "./lib/analytics";
+import { outboundSlug, track, trackSections } from "./lib/track";
 
 function useNavLinks(): { label: string; href: string }[] {
   const { settings } = useSiteSettings();
@@ -405,6 +405,7 @@ function ProjectCard({ project }: { project: Project }) {
               {project.liveUrl && (
                 <a
                   href={project.liveUrl}
+                  data-track={project.slug}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg ${palette.accentBg} ${palette.accentColor} border ${palette.accentBorder} text-base hover:opacity-80 transition-opacity`}
@@ -416,6 +417,7 @@ function ProjectCard({ project }: { project: Project }) {
               {project.docsUrl && (
                 <a
                   href={project.docsUrl}
+                  data-track={`${project.slug}-docs`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted/40 text-foreground/80 border border-border text-base hover:text-foreground hover:bg-muted/70 transition-colors"
@@ -427,6 +429,7 @@ function ProjectCard({ project }: { project: Project }) {
               {project.repoUrl && (
                 <a
                   href={project.repoUrl}
+                  data-track={`${project.slug}-source`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted/40 text-foreground/80 border border-border text-base hover:text-foreground hover:bg-muted/70 transition-colors"
@@ -552,6 +555,7 @@ function Releases({ projects }: { projects: Project[] }) {
                 {p.liveUrl && (
                   <a
                     href={p.liveUrl}
+                    data-track={p.slug}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-md ${palette.accentBg} ${palette.accentColor} border ${palette.accentBorder} hover:opacity-80 transition-opacity shrink-0`}
@@ -810,6 +814,7 @@ function ContactForm({ projects }: { projects: Project[] }) {
         message: message.trim(),
         createdAt: serverTimestamp(),
       });
+      track("contact");
       setStatus("sent");
       setName("");
       setEmail("");
@@ -940,6 +945,7 @@ function Newsletter() {
         subscribedAt: serverTimestamp(),
         unsubscribeToken: crypto.randomUUID(),
       });
+      track("subscribe");
       setStatus("subscribed");
       setEmail("");
     } catch (err) {
@@ -1032,7 +1038,27 @@ export function App() {
   const { settings } = useSiteSettings();
 
   useEffect(() => {
-    void logGuestVisit("plantagoai", window.location.pathname);
+    track("page");
+  }, []);
+
+  // Sections reached, once per session each. Re-run as optional sections
+  // (Releases) appear once settings load.
+  useEffect(
+    () => trackSections(["about", "products", "releases", "platform", "founder", "contact"]),
+    [settings.releasesEnabled, loading],
+  );
+
+  // Clicks on links that leave the site (project demos, docs, source,
+  // the founder's profiles). Project links carry data-track={slug}.
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!a || !/^https?:$/.test(a.protocol) || a.host === window.location.host) return;
+      const slug = outboundSlug(a.href, a.dataset.track);
+      if (slug) track("outbound", slug);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
   }, []);
 
   return (
