@@ -55,6 +55,13 @@
           }
         },
         {
+          "source": "/api/track",
+          "function": {
+            "functionId": "trackFn",
+            "region": "us-east1"
+          }
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }

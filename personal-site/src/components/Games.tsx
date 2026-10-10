@@ -3,6 +3,7 @@ import Trivia from "./games/Trivia";
 import SybilHunt from "./games/SybilHunt";
 import ContainerPacking from "./games/ContainerPacking";
 import CloudArchitect from "./games/CloudArchitect";
+import { track } from "../lib/track";
 
 const TABS = [
   { id: "trivia", name: "Trivia", subtitle: "Things I find delightful", Component: Trivia },
@@ -35,7 +36,10 @@ export default function Games() {
           {TABS.map((t) => (
             <button
               key={t.id}
-              onClick={() => setActive(t.id)}
+              onClick={() => {
+                setActive(t.id);
+                track("game", t.id);
+              }}
               className={`flex flex-col items-start border-b-2 px-3 py-3 text-left transition ${
                 active === t.id
                   ? "border-primary text-ink"

@@ -68,17 +68,17 @@ jobs:
         working-directory: personal-site
         run: npm install && npm run build
 
-      # The guest-visit beacon is fire-and-forget and swallows every error, so
-      # a build that lost the call looks identical to a working one from the
+      # The visit tracker is fire-and-forget and swallows every error, so a
+      # build that lost the call looks identical to a working one from the
       # outside. Assert it survived bundling before shipping.
       - name: Verify analytics survived the build
         run: |
           set -euo pipefail
-          if ! grep -rq "api/logGuestVisit" personal-site/dist/assets/*.js; then
-            echo "::error::personal-site build has no /api/logGuestVisit call — guest analytics would silently record nothing."
+          if ! grep -rq "api/track" personal-site/dist/assets/*.js; then
+            echo "::error::personal-site build has no /api/track call — visitor analytics would silently record nothing."
             exit 1
           fi
-          echo "ok: guest-visit beacon present in bundle"
+          echo "ok: visit tracker present in bundle"
 
       - name: Install firebase-tools
         run: npm install -g firebase-tools
@@ -110,21 +110,21 @@ jobs:
 
       # Catches a deploy that landed on a hosting site without the function
       # rewrites — the other half of the 2026-08-05 failure. With the rewrite,
-      # the function answers GET with 405 JSON; without it, the SPA catch-all
-      # serves index.html as 200 HTML and the beacon POSTs into the void.
+      # trackFn answers GET with 405 JSON; without it, the SPA catch-all
+      # serves index.html as 200 HTML and the tracker POSTs into the void.
       - name: Smoke-test the live rewrite
         run: |
           set -euo pipefail
           for i in 1 2 3; do
             CT=$(curl -sS -o /dev/null -w '%{content_type}' --max-time 20 \
-                   https://dagangilat.com/api/logGuestVisit || true)
+                   https://dagangilat.com/api/track || true)
             case "$CT" in
               application/json*)
-                echo "ok: /api/logGuestVisit reaches the function ($CT)"
+                echo "ok: /api/track reaches the function ($CT)"
                 exit 0 ;;
             esac
             echo "attempt $i: got '${CT:-no response}', retrying..."
             sleep 10
           done
-          echo "::error::/api/logGuestVisit is not routed to logGuestVisitFn on dagangilat.com — guest analytics will record nothing."
+          echo "::error::/api/track is not routed to trackFn on dagangilat.com — visitor analytics will record nothing."
           exit 1

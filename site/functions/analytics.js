@@ -17,7 +17,10 @@
 // reason to also allow direct client reads/writes for these collections.
 
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { createHash } from "node:crypto";
+import { eventRow, eventsFromBatch, MAX_EVENTS, parseRange } from "./analyticsTrack.js";
 
 const ADMIN_EMAILS = ["feedmyinfo@gmail.com", "dagan.gilat@gmail.com"];
 
@@ -184,5 +187,131 @@ export const getAnalyticsSessions = onCall(
     }).filter((r) => r.ts != null);
 
     return { rows, meta: { from: fromMs, to: toMs, total: rows.length, truncated, hardLimit: HARD_LIMIT } };
+  },
+);
+
+// ─── First-party visit tracking (Admin → Visitors) ─────────────────────
+// Ported from limorgilat.com's /api/track + /api/admin/analytics. Unlike
+// guest_visits above (one row per page load, raw IP stored), this keeps
+// per-visitor/per-session events — page views, sections reached, outbound
+// clicks, chat, contact — and stores only the country/city derived from
+// the IP, never the IP itself. guest_visits stays readable for history
+// but nothing writes to it any more.
+
+const TRACK_LIMIT_PER_10_MIN = 120;
+const trackHits = new Map(); // per-instance: ipHash → { count, resetAt }
+
+/** Best-effort per-instance rate limit, enough to blunt a script hammering
+ *  the endpoint without a Firestore round trip per request. */
+function allowTrack(ip) {
+  const key = createHash("sha256").update(ip || "none").digest("hex").slice(0, 16);
+  const now = Date.now();
+  const hit = trackHits.get(key);
+  if (!hit || hit.resetAt <= now) {
+    if (trackHits.size > 5000) trackHits.clear();
+    trackHits.set(key, { count: 1, resetAt: now + 10 * 60 * 1000 });
+    return true;
+  }
+  hit.count += 1;
+  return hit.count <= TRACK_LIMIT_PER_10_MIN;
+}
+
+/** Firebase Hosting forwards the visitor's address in fastly-client-ip. */
+function clientIp(req) {
+  return String(req.headers["fastly-client-ip"] || req.ip || "").trim();
+}
+
+// POST /api/track — a batch of visit events from the browser (see
+// src/lib/track.ts on both sites). Always answers 204 so a tracking hiccup
+// never shows up for the visitor. Rewritten on both hosting targets.
+export const trackFn = onRequest(
+  { region: "us-east1", cors: false, timeoutSeconds: 10, memory: "512MiB" },
+  async (req, res) => {
+    applyCors(req, res);
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+    // sendBeacon posts text/plain to skip the CORS preflight.
+    let body = req.body;
+    if (typeof body === "string" || Buffer.isBuffer(body)) {
+      try { body = JSON.parse(String(body)); } catch { body = null; }
+    }
+    const ip = clientIp(req);
+    if (!allowTrack(ip)) {
+      res.status(204).send("");
+      return;
+    }
+    try {
+      let geo = null;
+      if (ip) {
+        const geoip = (await import("geoip-lite")).default;
+        const g = geoip.lookup(ip);
+        if (g) geo = { country: g.country || null, city: g.city || null };
+      }
+      const docs = eventsFromBatch(body, req.headers || {}, geo, new Date());
+      if (docs.length) {
+        const db = getFirestore();
+        const batch = db.batch();
+        for (const d of docs) {
+          batch.set(db.collection("analyticsEvents").doc(), {
+            ...d,
+            ts: Timestamp.fromDate(d.ts),
+            expireAt: Timestamp.fromDate(d.expireAt),
+          });
+        }
+        await batch.commit();
+      }
+    } catch (err) {
+      console.error("[track] write failed", err?.message || err);
+    }
+    res.status(204).send("");
+  },
+);
+
+// getAnalyticsEvents — admin-only read of analyticsEvents in [from, to].
+// Aggregation happens in the browser (src/lib/visitAnalytics.ts), same as
+// limorgilat.com, so the dashboard can re-slice without another round trip.
+export const getAnalyticsEvents = onCall(
+  { region: "us-east1", timeoutSeconds: 60, memory: "512MiB" },
+  async (request) => {
+    requireAdmin(request);
+    const range = parseRange(request.data || {});
+    if (!range) {
+      throw new HttpsError("invalid-argument", "from/to must be ISO dates, at most 400 days apart");
+    }
+    const snap = await getFirestore()
+      .collection("analyticsEvents")
+      .where("ts", ">=", Timestamp.fromDate(range.from))
+      .where("ts", "<", Timestamp.fromDate(range.to))
+      .orderBy("ts", "desc")
+      .limit(MAX_EVENTS)
+      .get();
+    return { events: snap.docs.map((d) => eventRow(d.data())), capped: snap.size >= MAX_EVENTS };
+  },
+);
+
+/** Deletes visit events past their keep-until date (RETENTION_DAYS). */
+export const pruneAnalyticsEvents = onSchedule(
+  { schedule: "30 3 * * *", timeZone: "Etc/UTC", region: "us-east1", timeoutSeconds: 300, memory: "256MiB" },
+  async () => {
+    const db = getFirestore();
+    let deleted = 0;
+    for (let round = 0; round < 40; round++) {
+      const snap = await db.collection("analyticsEvents")
+        .where("expireAt", "<=", Timestamp.now())
+        .limit(400)
+        .get();
+      if (snap.empty) break;
+      const batch = db.batch();
+      snap.docs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+      deleted += snap.size;
+    }
+    console.info("[analytics] pruned", { deleted });
   },
 );
