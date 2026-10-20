@@ -21,6 +21,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { createHash } from "node:crypto";
 import { eventRow, eventsFromBatch, MAX_EVENTS, parseRange } from "./analyticsTrack.js";
+import { isDailyJobDue, jobSettings, SETTINGS_PATH } from "./scheduledJobs.js";
 
 const ADMIN_EMAILS = ["feedmyinfo@gmail.com", "dagan.gilat@gmail.com"];
 
@@ -295,11 +296,23 @@ export const getAnalyticsEvents = onCall(
   },
 );
 
-/** Deletes visit events past their keep-until date (RETENTION_DAYS). */
+/**
+ * Deletes visit events past their keep-until date (RETENTION_DAYS).
+ *
+ * Ticks hourly at :30 UTC but only does work when Admin → Scheduled Jobs says
+ * it is due (see scheduledJobs.js). Default: enabled, daily at 03:30 UTC —
+ * the same as the old fixed "30 3 * * *" cron.
+ */
 export const pruneAnalyticsEvents = onSchedule(
-  { schedule: "30 3 * * *", timeZone: "Etc/UTC", region: "us-east1", timeoutSeconds: 300, memory: "256MiB" },
+  { schedule: "30 * * * *", timeZone: "Etc/UTC", region: "us-east1", timeoutSeconds: 300, memory: "256MiB" },
   async () => {
     const db = getFirestore();
+    const jobId = "pruneAnalyticsEvents";
+    const ref = db.collection(SETTINGS_PATH.collection).doc(SETTINGS_PATH.doc);
+    const data = (await ref.get()).data() || {};
+    const settings = jobSettings(jobId, data.jobs?.[jobId]);
+    if (!isDailyJobDue(settings, new Date()).due) return;
+
     let deleted = 0;
     for (let round = 0; round < 40; round++) {
       const snap = await db.collection("analyticsEvents")

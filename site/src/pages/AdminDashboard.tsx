@@ -20,6 +20,7 @@ import {
 import { Link } from "react-router-dom";
 import { ProjectsEditor } from "./admin/ProjectsEditor";
 import { SiteSettingsPanel } from "./admin/SiteSettingsPanel";
+import { ScheduledJobsPanel } from "./admin/ScheduledJobsPanel";
 import { seedDefaultsIfEmpty, useProjects, getIconComponent, COLORS } from "../lib/projects";
 import { logAdminLogin } from "../lib/analytics";
 import { markAdminBrowser } from "../lib/track";
@@ -801,6 +802,7 @@ export default function AdminDashboard() {
 
         {/* Site-level section toggles */}
         <SiteSettingsPanel />
+        <ScheduledJobsPanel />
 
         {/* Projects configuration (CMS) */}
         <ProjectsEditor />
