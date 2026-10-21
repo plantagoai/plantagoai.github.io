@@ -39,7 +39,8 @@ export default function Dreamless() {
               still awake.
             </p>
             <p>
-              I built the AI agents that write, draw, voice, score and edit every episode through{" "}
+              I created the series idea, its bible and its style guide. Every episode is written,
+              drawn, voiced, scored and edited by AI agents I built and direct through{" "}
               <a
                 href="https://micromedia-ai.com/"
                 target="_blank"
