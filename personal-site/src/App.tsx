@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import Hero from "./components/Hero";
+import Dreamless from "./components/Dreamless";
 import Pillars from "./components/Pillars";
 import Timeline from "./components/Timeline";
 import Games from "./components/Games";
@@ -12,7 +13,7 @@ import { outboundSlug, track, trackSections } from "./lib/track";
 export default function App() {
   useEffect(() => {
     track("page");
-    const stopSections = trackSections(["pillars", "timeline", "games", "chat", "contact"]);
+    const stopSections = trackSections(["dreamless", "pillars", "timeline", "games", "chat", "contact"]);
     // Clicks on links that leave the site (LinkedIn, GitHub, Foundation…).
     const onClick = (e: MouseEvent) => {
       const a = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
@@ -30,6 +31,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg text-ink">
       <Hero />
+      <Dreamless />
       <Pillars />
       <Timeline />
       <Games />
