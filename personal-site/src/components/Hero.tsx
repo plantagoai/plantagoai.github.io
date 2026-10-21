@@ -115,12 +115,12 @@ function AnimatedTitle() {
 export default function Hero() {
   return (
     <section className="relative isolate overflow-hidden">
-      <div className="container-wide flex min-h-[88vh] flex-col justify-center pt-24 pb-16">
+      <div className="container-wide flex flex-col justify-center pt-20 pb-10">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="grid items-center gap-12 md:grid-cols-[1.2fr_1fr]"
+          className="grid items-center gap-12"
         >
           <div>
             <p className="text-meta uppercase tracking-[0.18em]">Dagan Gilat</p>
@@ -149,7 +149,6 @@ export default function Hero() {
               </a>
             </div>
           </div>
-          <PillarsCard className="mx-auto w-full max-w-[420px]" />
         </motion.div>
       </div>
     </section>

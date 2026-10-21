@@ -7,7 +7,7 @@ const PRESS = "https://dreamless.micromedia-ai.com/#press";
 
 export default function Dreamless() {
   return (
-    <section id="dreamless" className="border-t border-border py-20">
+    <section id="dreamless" className="border-t border-border pt-10 pb-20">
       <div className="container-wide">
         <p className="text-meta uppercase tracking-[0.18em]">Now showing</p>
         <motion.a
