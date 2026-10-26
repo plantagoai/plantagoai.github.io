@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { mergePersonalHome, type PersonalHome } from "../data/homeContent";
+import { appCheckHeaders } from "./appCheck";
 
 /* Reads siteSettings/personalHome through Firestore's REST API: the document
-   is public-read, and the REST call keeps the Firebase SDK out of this
-   bundle. Edits are made in plantagoai.com/admin → dagangilat.com Sections. */
+   is public-read but the project enforces App Check, so the call carries an
+   App Check token (see appCheck.ts). Edits are made in plantagoai.com/admin → dagangilat.com Sections. */
 const DOC_URL =
   "https://firestore.googleapis.com/v1/projects/plantagoai/databases/(default)/documents/siteSettings/personalHome";
 
@@ -39,23 +40,31 @@ export function useHome(): { home: PersonalHome; loading: boolean } {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let done = false;
-    const finish = (data?: Record<string, unknown>) => {
-      if (done) return;
-      done = true;
-      setStored(data);
+    let cancelled = false;
+    let shown = false;
+    const show = (data?: Record<string, unknown>) => {
+      if (cancelled) return;
+      // Defaults may already be up after the timeout; saved settings that
+      // arrive later still replace them, but defaults never replace data.
+      if (data) setStored(data);
+      else if (shown) return;
+      shown = true;
       setLoading(false);
     };
     // The page waits for this document so hidden sections don't flash; if
     // it is slow or unreachable, show the defaults rather than nothing.
-    const fallback = setTimeout(() => finish(), 3000);
-    fetch(DOC_URL)
+    const fallback = setTimeout(() => show(), 3000);
+    appCheckHeaders()
+      .then((headers) => fetch(DOC_URL, { headers }))
       .then((r) => (r.ok ? r.json() : null))
       .then((doc: { fields?: Record<string, FirestoreValue> } | null) =>
-        finish(doc?.fields ? (fromFirestore({ mapValue: { fields: doc.fields } }) as Record<string, unknown>) : undefined),
+        show(doc?.fields ? (fromFirestore({ mapValue: { fields: doc.fields } }) as Record<string, unknown>) : undefined),
       )
-      .catch(() => finish());
-    return () => clearTimeout(fallback);
+      .catch(() => show());
+    return () => {
+      cancelled = true;
+      clearTimeout(fallback);
+    };
   }, []);
 
   return { home: mergePersonalHome(stored), loading };
