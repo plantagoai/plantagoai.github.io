@@ -4,10 +4,12 @@ import { db } from "./firebase";
 
 export interface SiteSettings {
   releasesEnabled: boolean;
+  dreamlessBannerEnabled: boolean;
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
   releasesEnabled: false,
+  dreamlessBannerEnabled: true,
 };
 
 const SETTINGS_DOC = doc(db, "siteSettings", "main");

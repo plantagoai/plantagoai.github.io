@@ -14,6 +14,11 @@ const SECTION_FLAGS: SectionFlag[] = [
     label: "Releases",
     description: "Latest Releases section + nav link. Shows products with a version set.",
   },
+  {
+    key: "dreamlessBannerEnabled",
+    label: "Dreamless banner",
+    description: "Dreamless: The Hush banner with the series poster, under the hero.",
+  },
 ];
 
 export function SiteSettingsPanel() {
