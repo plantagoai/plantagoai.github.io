@@ -273,6 +273,55 @@ function Hero({ projects, loading }: { projects: Project[]; loading: boolean }) 
   );
 }
 
+const DREAMLESS_URL = "https://dreamless.micromedia-ai.com";
+
+/* Series banner for Dreamless: The Hush, made with YourContentCreator. Kept
+   in the poster's own night palette rather than the site tokens, so it reads
+   as the show's key art. Toggled in Admin → Site settings. */
+function DreamlessBanner() {
+  return (
+    <section aria-label="Dreamless: The Hush" className="scroll-mt-20">
+      <a
+        href={DREAMLESS_URL}
+        data-track="dreamless"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group grid grid-cols-1 sm:grid-cols-[minmax(0,15rem)_1fr] overflow-hidden rounded-xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-slate-100 shadow-elevation-1"
+      >
+        <img
+          src="/dreamless-poster.webp"
+          alt="Dreamless: The Hush poster — Kai and his robot Tofu on a balcony above a sleeping city at night"
+          width={600}
+          height={840}
+          loading="lazy"
+          className="w-full h-full max-h-96 sm:max-h-none object-cover object-top"
+        />
+        <div className="flex flex-col justify-center gap-4 p-6 md:p-8">
+          <p className="text-xs font-medium uppercase tracking-[0.3em] text-teal-300">
+            New series · Now airing
+          </p>
+          <div>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-wide text-white">
+              Dreamless: The Hush
+            </h2>
+            <p className="mt-2 text-lg italic text-slate-300">One in a million can't dream.</p>
+          </div>
+          <p className="text-base text-slate-300 leading-relaxed max-w-xl">
+            When the world falls into the Hush, a sleep nobody wakes from, Kai and his robot
+            Tofu keep watch over a city gone quiet. A 28-episode AI-animated anime series,
+            about a minute an episode, made with YourContentCreator — every episode written,
+            drawn, voiced and scored by AI agents and reviewed by a person.
+          </p>
+          <span className="inline-flex w-fit items-center gap-2 rounded-lg bg-teal-400 px-4 py-2.5 text-base font-medium text-slate-950 transition-opacity group-hover:opacity-90">
+            Watch the series
+            <ArrowRight className="w-4 h-4" />
+          </span>
+        </div>
+      </a>
+    </section>
+  );
+}
+
 function About() {
   return (
     <section id="about" className="scroll-mt-20">
@@ -1075,6 +1124,7 @@ export function App() {
       <Nav />
       <main className="p-6 lg:p-8 max-w-5xl mx-auto space-y-10 animate-fade-in">
         <Hero projects={projects} loading={loading} />
+        {settings.dreamlessBannerEnabled && <DreamlessBanner />}
         <About />
         <Projects projects={projects} />
         {settings.releasesEnabled && <Releases projects={projects} />}
