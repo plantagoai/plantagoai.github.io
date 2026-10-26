@@ -13,7 +13,14 @@ import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import FloatingChat from "./components/FloatingChat";
 import { useHome } from "./lib/home";
-import { groupRows, rowColumns, PERSONAL_ANCHORS, type PersonalSectionId } from "./data/homeContent";
+import {
+  groupRows,
+  rowColumns,
+  personalDefaultAlign,
+  PERSONAL_ANCHORS,
+  type PersonalSectionEntry,
+  type PersonalSectionId,
+} from "./data/homeContent";
 import { outboundSlug, track, trackSections } from "./lib/track";
 
 export default function App() {
@@ -58,6 +65,10 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sectionKey, loading]);
 
+  // Alignment set in Admin; a section left at its own default keeps its
+  // markup untouched.
+  const alignOf = (s: PersonalSectionEntry) => (s.align === personalDefaultAlign(s.id) ? undefined : s.align);
+
   const render = (id: PersonalSectionId, inRow = false) => {
     switch (id) {
       case "dreamlessBanner":
@@ -98,7 +109,13 @@ export default function App() {
       {!loading &&
         rows.map((row) =>
           row.length === 1 ? (
-            <Fragment key={row[0].id}>{render(row[0].id)}</Fragment>
+            alignOf(row[0]) ? (
+              <div key={row[0].id} data-align={alignOf(row[0])}>
+                {render(row[0].id)}
+              </div>
+            ) : (
+              <Fragment key={row[0].id}>{render(row[0].id)}</Fragment>
+            )
           ) : (
             <div
               key={row.map((s) => s.id).join("+")}
@@ -106,7 +123,11 @@ export default function App() {
               style={{ "--row-cols": rowColumns(row.map((s) => s.id)) } as React.CSSProperties}
             >
               {row.map((s) => (
-                <div key={s.id} className={`min-w-0 ${s.id === "photo" ? "self-center" : ""}`}>
+                <div
+                  key={s.id}
+                  data-align={alignOf(s)}
+                  className={`min-w-0 ${s.id === "photo" ? "self-center" : ""}`}
+                >
                   {render(s.id, true)}
                 </div>
               ))}

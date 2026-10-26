@@ -52,6 +52,7 @@ export default function Chat({ content }: { content: PersonalContent["chat"] }) 
         <div className="mt-8 rounded-2xl border border-border bg-bg">
           <div
             ref={scrollerRef}
+            data-align-skip
             className="max-h-[400px] min-h-[200px] space-y-3 overflow-y-auto p-5"
           >
             {messages.length === 0 ? (

@@ -4,6 +4,7 @@ import { AudioLines, Wallet, Mic, Users, Layers, type LucideIcon } from "lucide-
 import { db } from "./firebase";
 import { ICON_MAP } from "./projects";
 import { DEFAULT_SETTINGS, useSiteSettings, type SiteSettings } from "./siteSettings";
+import { readAlign, type SectionAlign } from "../../../personal-site/src/data/homeContent";
 
 /* Homepage sections as content, so every block on plantagoai.com can be
    edited, reordered and hidden from Admin → Homepage sections.
@@ -410,7 +411,14 @@ export const SECTION_ANCHORS: Record<SectionId, string | null> = {
   footer: null,
 };
 
-export interface SectionEntry { id: SectionId; visible: boolean; sideBySide: boolean }
+/** Sections whose headings are centred by design; every other one starts left. */
+const CENTERED_BY_DEFAULT: SectionId[] = ["products", "releases", "platform", "footer"];
+
+export function defaultAlign(id: SectionId): SectionAlign {
+  return CENTERED_BY_DEFAULT.includes(id) ? "center" : "left";
+}
+
+export interface SectionEntry { id: SectionId; visible: boolean; sideBySide: boolean; align: SectionAlign }
 
 export interface Homepage {
   sections: SectionEntry[];
@@ -426,6 +434,7 @@ function defaultSections(legacy: SiteSettings): SectionEntry[] {
     visible:
       id === "releases" ? legacy.releasesEnabled : id === "dreamless" ? legacy.dreamlessBannerEnabled : true,
     sideBySide: false,
+    align: defaultAlign(id),
   }));
 }
 
@@ -442,10 +451,15 @@ export function mergeHomepage(stored: Record<string, unknown> | undefined, legac
   const seen = new Set<SectionId>();
   const sections: SectionEntry[] = [];
   for (const raw of rawSections) {
-    const s = raw as { id?: unknown; visible?: unknown; sideBySide?: unknown };
+    const s = raw as { id?: unknown; visible?: unknown; sideBySide?: unknown; align?: unknown };
     if (!isSectionId(s?.id) || seen.has(s.id)) continue;
     seen.add(s.id);
-    sections.push({ id: s.id, visible: s.visible !== false, sideBySide: s.sideBySide === true });
+    sections.push({
+      id: s.id,
+      visible: s.visible !== false,
+      sideBySide: s.sideBySide === true,
+      align: readAlign(s.align, defaultAlign(s.id)),
+    });
   }
   defaults.forEach((d, i) => {
     if (seen.has(d.id)) return;

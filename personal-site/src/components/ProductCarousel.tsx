@@ -100,6 +100,7 @@ export default function ProductCarousel({
             animate={{ opacity: 1, x: 0 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -24 }}
             transition={{ duration: 0.35 }}
+            data-align-skip
             className="grid gap-6 p-6 md:min-h-[20rem] md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-10 md:p-8"
             aria-label={`${index + 1} of ${count}: ${p.name}`}
           >

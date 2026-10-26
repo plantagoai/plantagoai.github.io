@@ -27,11 +27,13 @@ import {
 } from "./lib/projects";
 import {
   useHomepage,
+  defaultAlign,
   SECTION_ANCHORS,
   TONE_TEXT,
   CARD_COLORS,
   WORD_ICONS,
   type SectionId,
+  type SectionEntry,
   type HeroContent,
   type DreamlessContent,
   type AboutContent,
@@ -298,7 +300,7 @@ function Statement({ content }: { content: StatementContent }) {
       <figure className="relative overflow-hidden rounded-xl border border-border bg-card p-6 md:p-10 shadow-elevation-1">
         <span
           aria-hidden
-          className="pointer-events-none absolute right-6 -top-4 select-none font-serif text-[10rem] leading-none text-teal-100"
+          className="align-flip pointer-events-none absolute right-6 -top-4 select-none font-serif text-[10rem] leading-none text-teal-100"
         >
           &ldquo;
         </span>
@@ -383,7 +385,7 @@ function Photo({ content }: { content: PhotoContent }) {
 function InfoCards({ cards, columns }: { cards: AboutContent["cards"]; columns: string }) {
   if (cards.length === 0) return null;
   return (
-    <div className={`grid ${columns} gap-3`}>
+    <div data-align-skip className={`grid ${columns} gap-3`}>
       {cards.map((card, i) => {
         const color = CARD_COLORS[card.color] ?? CARD_COLORS.indigo;
         return (
@@ -433,7 +435,7 @@ function ProjectCard({ project }: { project: Project }) {
   const badgeClass = STATUS_BADGE_CLASSES[project.statusKind];
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-elevation-1">
+    <div data-align-skip className="bg-card border border-border rounded-xl overflow-hidden shadow-elevation-1">
       {/* Header. The edition puts the accent on the icon tile and a hairline
           rule, not a full-bleed gradient band — a saturated band per card was
           the loudest thing separating this page from every other Foundation
@@ -584,7 +586,10 @@ function CompactProjectCard({ project }: { project: Project }) {
   const Icon = getIconComponent(project.iconKey);
   const badgeClass = STATUS_BADGE_CLASSES[project.statusKind];
   return (
-    <div className="h-full bg-card border border-border rounded-xl shadow-elevation-1 p-6 md:p-8 grid gap-6 md:grid-cols-2 md:gap-10">
+    <div
+      data-align-skip
+      className="h-full bg-card border border-border rounded-xl shadow-elevation-1 p-6 md:p-8 grid gap-6 md:grid-cols-2 md:gap-10"
+    >
       <div className="flex flex-col">
         <div className="flex items-center gap-4">
           <div
@@ -866,7 +871,7 @@ function Platform({ content, projects }: { content: PlatformContent; projects: P
           <p className="eyebrow mb-2">{content.packagesEyebrow}</p>
           <h3 className="font-semibold text-lg text-foreground">{content.packagesTitle}</h3>
         </div>
-        <div className="p-6 grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div data-align-skip className="p-6 grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           {sharedPackages.map((pkg) => (
             <div
               key={pkg.name}
@@ -1331,6 +1336,12 @@ export function App() {
     return () => document.removeEventListener("click", onClick);
   }, []);
 
+  // Alignment set in Admin; a section left at its own default keeps its
+  // markup untouched.
+  const alignOf = (s: SectionEntry) => (s.align === defaultAlign(s.id) ? undefined : s.align);
+  const renderAligned = (s: SectionEntry) =>
+    alignOf(s) ? <div data-align={alignOf(s)}>{renderSection(s.id)}</div> : renderSection(s.id);
+
   const renderSection = (id: SectionId) => {
     switch (id) {
       case "hero": {
@@ -1386,7 +1397,7 @@ export function App() {
         {!homepageLoading &&
           rows.map((row) =>
             row.length === 1 ? (
-              <Fragment key={row[0].id}>{renderSection(row[0].id)}</Fragment>
+              <Fragment key={row[0].id}>{renderAligned(row[0])}</Fragment>
             ) : (
               <div
                 key={row.map((s) => s.id).join("+")}
@@ -1394,7 +1405,7 @@ export function App() {
                 style={{ "--row-cols": rowColumns(row.map((s) => s.id)) } as React.CSSProperties}
               >
                 {row.map((s) => (
-                  <div key={s.id} className="min-w-0">
+                  <div key={s.id} data-align={alignOf(s)} className="min-w-0">
                     {renderSection(s.id)}
                   </div>
                 ))}
@@ -1402,7 +1413,7 @@ export function App() {
             ),
           )}
       </main>
-      {!homepageLoading && footerLast && renderSection("footer")}
+      {!homepageLoading && footerLast && renderAligned(lastSection)}
     </div>
   );
 }

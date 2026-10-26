@@ -18,7 +18,7 @@ export default function Timeline({ content }: { content: PersonalContent["timeli
       <div className="container-wide">
         <p className="text-meta uppercase tracking-[0.18em]">{content.eyebrow}</p>
         <h2 className="heading-section mt-2">{content.title}</h2>
-        <div className="mt-10 grid gap-x-10 md:grid-cols-[200px_1fr]">
+        <div data-align-skip className="mt-10 grid gap-x-10 md:grid-cols-[200px_1fr]">
           <div className="hidden md:block">
             {timeline.length > 0 && (
               <div className="sticky top-24 text-xs text-muted">

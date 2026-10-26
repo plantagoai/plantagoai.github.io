@@ -16,7 +16,7 @@ export default function Statement({ content }: { content: PersonalContent["state
         >
           <span
             aria-hidden
-            className="pointer-events-none absolute right-0 -top-10 select-none font-serif text-[10rem] leading-none"
+            className="align-flip pointer-events-none absolute right-0 -top-10 select-none font-serif text-[10rem] leading-none"
             style={{ color: "hsl(var(--pillar-voice) / 0.18)" }}
           >
             &ldquo;
