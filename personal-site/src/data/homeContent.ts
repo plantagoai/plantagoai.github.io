@@ -46,8 +46,7 @@ export const PERSONAL_SECTION_NOTES: Partial<Record<PersonalSectionId, string>> 
   dreamless: "The section that was on the page before the banner. Hidden by default.",
   foundationCard: "Hidden since the hero was shortened; show it to bring the card back.",
   statement: "From the Dreamless press kit. Leave the photo empty to sign without one.",
-  photo:
-    "Right after the Hero, it sits beside the headline (under it on phones); anywhere else it is its own section. Upload a new photo to replace it; it is resized in the browser and saved with the section.",
+  photo: "Upload a new photo to replace it; it is resized in the browser and saved with the section.",
 };
 
 /** Colours from the site's palette. */
@@ -449,8 +448,10 @@ export const PERSONAL_ANCHORS: Record<PersonalSectionId, string | null> = {
 };
 
 const HIDDEN_BY_DEFAULT: PersonalSectionId[] = ["foundationCard", "dreamless"];
+/** Sections that start next to the one above them: the photo beside the hero. */
+const SIDE_BY_SIDE_BY_DEFAULT: PersonalSectionId[] = ["photo"];
 
-export interface PersonalSectionEntry { id: PersonalSectionId; visible: boolean }
+export interface PersonalSectionEntry { id: PersonalSectionId; visible: boolean; sideBySide: boolean }
 export interface PersonalHome { sections: PersonalSectionEntry[]; content: PersonalContent }
 
 function isId(v: unknown): v is PersonalSectionId {
@@ -464,15 +465,20 @@ export function mergePersonalHome(stored: Record<string, unknown> | undefined): 
   const defaults: PersonalSectionEntry[] = PERSONAL_SECTION_IDS.map((id) => ({
     id,
     visible: !HIDDEN_BY_DEFAULT.includes(id),
+    sideBySide: SIDE_BY_SIDE_BY_DEFAULT.includes(id),
   }));
   const raw = Array.isArray(stored?.sections) ? (stored!.sections as unknown[]) : [];
   const seen = new Set<PersonalSectionId>();
   const sections: PersonalSectionEntry[] = [];
   for (const r of raw) {
-    const s = r as { id?: unknown; visible?: unknown };
+    const s = r as { id?: unknown; visible?: unknown; sideBySide?: unknown };
     if (!isId(s?.id) || seen.has(s.id)) continue;
     seen.add(s.id);
-    sections.push({ id: s.id, visible: s.visible !== false });
+    sections.push({
+      id: s.id,
+      visible: s.visible !== false,
+      sideBySide: typeof s.sideBySide === "boolean" ? s.sideBySide : SIDE_BY_SIDE_BY_DEFAULT.includes(s.id),
+    });
   }
   defaults.forEach((d, i) => {
     if (seen.has(d.id)) return;
@@ -488,6 +494,28 @@ export function mergePersonalHome(stored: Record<string, unknown> | undefined): 
     content[id] = { ...PERSONAL_DEFAULTS[id], ...(storedContent[id] ?? {}) };
   }
   return { sections, content: content as unknown as PersonalContent };
+}
+
+/** Up to this many sections share a row. */
+export const MAX_PER_ROW = 3;
+
+/** The page's rows: a section marked side by side joins the row of the
+ *  visible section above it, up to MAX_PER_ROW; a full row starts a new one.
+ *  Shared by both sites (plantagoai.com imports it from here). */
+export function groupRows<T extends { sideBySide?: boolean }>(visible: T[]): T[][] {
+  const rows: T[][] = [];
+  for (const s of visible) {
+    const last = rows[rows.length - 1];
+    if (s.sideBySide && last && last.length < MAX_PER_ROW) last.push(s);
+    else rows.push([s]);
+  }
+  return rows;
+}
+
+/** A row's columns on wide screens: a photo takes the width it needs, every
+ *  other section an equal share of the rest. */
+export function rowColumns(ids: string[]): string {
+  return ids.map((id) => (id === "photo" ? "auto" : "minmax(0,1fr)")).join(" ");
 }
 
 /* ---- Admin form schema (same shape as site/src/lib/homeSections.ts) ---- */

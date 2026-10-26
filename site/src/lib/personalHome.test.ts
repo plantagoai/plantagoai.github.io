@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  groupRows,
   mergePersonalHome,
   PERSONAL_DEFAULTS,
   PERSONAL_FIELDS,
@@ -9,7 +10,7 @@ import {
 describe("mergePersonalHome", () => {
   it("puts the Dreamless banner on top and hides the older sections by default", () => {
     const home = mergePersonalHome(undefined);
-    expect(home.sections[0]).toEqual({ id: "dreamlessBanner", visible: true });
+    expect(home.sections[0]).toEqual({ id: "dreamlessBanner", visible: true, sideBySide: false });
     expect(home.sections.find((s) => s.id === "dreamless")?.visible).toBe(false);
     expect(home.sections.find((s) => s.id === "foundationCard")?.visible).toBe(false);
     expect(home.content).toEqual(PERSONAL_DEFAULTS);
@@ -36,5 +37,23 @@ describe("mergePersonalHome", () => {
       const keys = PERSONAL_FIELDS[id].map((f) => f.key).sort();
       expect(keys).toEqual(Object.keys(PERSONAL_DEFAULTS[id]).sort());
     }
+  });
+});
+
+describe("side by side", () => {
+  it("starts the photo next to the hero and keeps a stored choice", () => {
+    expect(mergePersonalHome(undefined).sections.find((s) => s.id === "photo")?.sideBySide).toBe(true);
+    const stored = mergePersonalHome({ sections: [{ id: "hero", visible: true }, { id: "photo", visible: true, sideBySide: false }] });
+    expect(stored.sections.find((s) => s.id === "photo")?.sideBySide).toBe(false);
+    // Saved before the option existed: the default applies.
+    const old = mergePersonalHome({ sections: [{ id: "hero", visible: true }, { id: "photo", visible: true }] });
+    expect(old.sections.find((s) => s.id === "photo")?.sideBySide).toBe(true);
+  });
+
+  it("groups up to three sections into a row", () => {
+    const e = (id: string, sideBySide = false) => ({ id, sideBySide });
+    const rows = groupRows([e("a"), e("b", true), e("c", true), e("d", true), e("e"), e("f", true)]);
+    expect(rows.map((r) => r.map((s) => s.id))).toEqual([["a", "b", "c"], ["d"], ["e", "f"]]);
+    expect(groupRows([e("a", true)]).map((r) => r.length)).toEqual([1]);
   });
 });

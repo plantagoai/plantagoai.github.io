@@ -13,7 +13,7 @@ import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import FloatingChat from "./components/FloatingChat";
 import { useHome } from "./lib/home";
-import { PERSONAL_ANCHORS, type PersonalSectionId } from "./data/homeContent";
+import { groupRows, rowColumns, PERSONAL_ANCHORS, type PersonalSectionId } from "./data/homeContent";
 import { outboundSlug, track, trackSections } from "./lib/track";
 
 export default function App() {
@@ -26,9 +26,10 @@ export default function App() {
   // The first visible section that renders in the page flow (the floating
   // button doesn't), so the hero keeps its tall top padding only when first.
   const firstId = visible.find((s) => s.id !== "floatingChat")?.id;
-  // The photo placed straight after the hero sits beside the hero's text.
-  const heroIndex = visible.findIndex((s) => s.id === "hero");
-  const photoInHero = heroIndex >= 0 && visible[heroIndex + 1]?.id === "photo" && !!content.photo.image;
+  // Sections marked "side by side" in Admin share a row with the one above
+  // (up to three). The floating button sits outside the page flow.
+  const rows = groupRows(visible.filter((s) => s.id !== "floatingChat"));
+  const floating = visible.some((s) => s.id === "floatingChat");
 
   useEffect(() => {
     track("page");
@@ -52,20 +53,14 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sectionKey, loading]);
 
-  const render = (id: PersonalSectionId) => {
+  const render = (id: PersonalSectionId, inRow = false) => {
     switch (id) {
       case "dreamlessBanner":
         return <DreamlessBanner content={content.dreamlessBanner} />;
       case "hero":
-        return (
-          <Hero
-            content={content.hero}
-            first={firstId === "hero"}
-            aside={photoInHero ? <Photo content={content.photo} inline /> : undefined}
-          />
-        );
+        return <Hero content={content.hero} first={firstId === "hero"} />;
       case "photo":
-        return photoInHero ? null : <Photo content={content.photo} />;
+        return <Photo content={content.photo} inline={inRow} />;
       case "statement":
         return <Statement content={content.statement} />;
       case "foundationCard":
@@ -93,7 +88,25 @@ export default function App() {
     <div className="min-h-screen bg-bg text-ink">
       {/* Wait for the saved layout, so a hidden or edited section never
           flashes its default copy first. */}
-      {!loading && visible.map((s) => <Fragment key={s.id}>{render(s.id)}</Fragment>)}
+      {!loading &&
+        rows.map((row) =>
+          row.length === 1 ? (
+            <Fragment key={row[0].id}>{render(row[0].id)}</Fragment>
+          ) : (
+            <div
+              key={row.map((s) => s.id).join("+")}
+              className="section-row"
+              style={{ "--row-cols": rowColumns(row.map((s) => s.id)) } as React.CSSProperties}
+            >
+              {row.map((s) => (
+                <div key={s.id} className={`min-w-0 ${s.id === "photo" ? "self-center" : ""}`}>
+                  {render(s.id, true)}
+                </div>
+              ))}
+            </div>
+          ),
+        )}
+      {!loading && floating && render("floatingChat")}
     </div>
   );
 }

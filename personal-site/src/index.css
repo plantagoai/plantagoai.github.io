@@ -46,6 +46,20 @@
   .text-meta {
     @apply text-sm text-muted;
   }
+  /* Sections side by side (Admin → "Side by side"): one container for the
+     row, so each section drops its own width and side padding. */
+  .section-row {
+    @apply mx-auto grid w-full max-w-6xl items-start gap-x-10 px-6 pb-8 md:pb-0;
+  }
+  @media (min-width: 768px) {
+    .section-row {
+      grid-template-columns: var(--row-cols);
+    }
+  }
+  .section-row .container-wide,
+  .section-row .container-prose {
+    @apply max-w-none px-0;
+  }
   .btn-primary {
     @apply inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition;
     background: hsl(var(--ink));
