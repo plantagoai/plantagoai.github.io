@@ -50,6 +50,15 @@ export const PERSONAL_SECTION_NOTES: Partial<Record<PersonalSectionId, string>> 
 };
 
 /** Colours from the site's palette. */
+export const PILLARS_SOURCES = ["products", "cards"] as const;
+export type PillarsSource = (typeof PILLARS_SOURCES)[number];
+
+/** Seconds per product in the rotation; falls back to 7 for anything unusable. */
+export function rotationSeconds(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 2 ? Math.min(n, 120) : 7;
+}
+
 export const PERSONAL_TONES = ["voice", "share", "market", "ink", "muted"] as const;
 export type PersonalTone = (typeof PERSONAL_TONES)[number];
 
@@ -127,6 +136,8 @@ export interface PersonalContent {
   };
   pillars: {
     eyebrow: string;
+    source: PillarsSource;
+    rotateSeconds: string;
     titleLead: string;
     titleWords: ColoredWord[];
     titleTail: string;
@@ -248,6 +259,8 @@ export const PERSONAL_DEFAULTS: PersonalContent = {
   },
   pillars: {
     eyebrow: "What I'm building",
+    source: "products",
+    rotateSeconds: "7",
     titleLead: "Three pillars —",
     titleWords: [
       { text: "Voice.", tone: "voice" },
@@ -606,6 +619,14 @@ export const PERSONAL_FIELDS: Record<PersonalSectionId, Field[]> = {
   ],
   pillars: [
     { key: "eyebrow", label: "Eyebrow", kind: "text" },
+    {
+      key: "source",
+      label: "Show",
+      kind: "select",
+      options: PILLARS_SOURCES,
+      hint: "products: one card per enabled product from plantagoai.com Products, in rotation. cards: the cards below.",
+    },
+    { key: "rotateSeconds", label: "Seconds per product", kind: "text", hint: "How long each product shows before the next one." },
     { key: "titleLead", label: "Title start", kind: "text" },
     coloredWords("titleWords", "Coloured title words"),
     { key: "titleTail", label: "Title end (grey)", kind: "text" },
