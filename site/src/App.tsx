@@ -294,7 +294,7 @@ function DreamlessBanner() {
           width={600}
           height={840}
           loading="lazy"
-          className="w-full max-h-96 sm:max-h-none object-cover object-top"
+          className="w-full h-full max-h-96 sm:max-h-none object-cover object-top"
         />
         <div className="flex flex-col justify-center gap-4 p-6 md:p-8">
           <p className="text-xs font-medium uppercase tracking-[0.3em] text-teal-300">
