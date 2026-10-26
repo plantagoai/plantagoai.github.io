@@ -116,7 +116,9 @@ html {
    a child of this element, and an `overflow` ancestor silently kills
    `position: sticky`. `.mesh-field` already clips its own blobs, so the
    outer clip was only belt-and-braces. */
-.mesh-hero { position: relative; }
+/* overflow-x: clip (not hidden) trims the full-bleed band's scrollbar-width
+   overhang without making this a scroll container, so sticky still works. */
+.mesh-hero { position: relative; overflow-x: clip; }
 .mesh-field {
   position: absolute;
   inset: 0 0 auto 0;
@@ -125,6 +127,17 @@ html {
   background: #e8fbf4;
   overflow: hidden;
   pointer-events: none;
+}
+/* The band behind a hero that was moved down the page (Admin → Homepage
+   Sections): spans the viewport from inside the centred column and starts
+   a little above the hero's own top padding. */
+.mesh-field-bleed {
+  inset: -1.5rem auto auto 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  /* Slanted on top too: mid-page there is no viewport edge to hide a
+     straight cut. */
+  clip-path: polygon(0 12%, 100% 0, 100% 62%, 0 100%);
 }
 /* Scrim. Without this the band is a full-strength wash edge to edge, and the
    nav links (#6e6e73) plus the indigo/teal headline land on saturated cyan at
