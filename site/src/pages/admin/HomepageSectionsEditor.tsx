@@ -4,6 +4,7 @@ import {
   ArrowUp,
   ChevronDown,
   ChevronUp,
+  Columns3,
   Eye,
   EyeOff,
   ImageUp,
@@ -30,10 +31,11 @@ import {
   PERSONAL_FIELDS,
   PERSONAL_SECTION_LABELS,
   PERSONAL_SECTION_NOTES,
+  MAX_PER_ROW,
 } from "../../../../personal-site/src/data/homeContent";
 
 type Draft = Record<string, unknown>;
-type Entry = { id: string; visible: boolean };
+type Entry = { id: string; visible: boolean; sideBySide: boolean };
 
 /** One site's sections: where they load from and save to, and how each
  *  one is labelled and edited. */
@@ -109,6 +111,19 @@ export function HomepageSectionsEditor({ site = PLANTAGOAI_SECTIONS }: { site?: 
     return writeSections(next, sections[index].id);
   };
 
+  const toggleSideBySide = (index: number) => {
+    const next = sections.map((s, i) => (i === index ? { ...s, sideBySide: !s.sideBySide } : s));
+    return writeSections(next, sections[index].id);
+  };
+
+  // How many sections already share the row this one would join (the
+  // side-by-side run directly above it, counting the section that starts it).
+  const rowSizeAbove = (index: number) => {
+    let n = 1;
+    for (let j = index - 1; j > 0 && sections[j].sideBySide; j--) n++;
+    return n;
+  };
+
   const toggleVisible = (index: number) => {
     const next = sections.map((s, i) => (i === index ? { ...s, visible: !s.visible } : s));
     return writeSections(next, sections[index].id);
@@ -159,11 +174,35 @@ export function HomepageSectionsEditor({ site = PLANTAGOAI_SECTIONS }: { site?: 
                     >
                       {section.visible ? "VISIBLE" : "HIDDEN"}
                     </span>
+                    {section.sideBySide && i > 0 && (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border bg-sky-50 text-sky-700 border-sky-200">
+                        SIDE BY SIDE
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground truncate mt-0.5">
                     {summary(content[section.id])}
                   </p>
                 </div>
+
+                <button
+                  onClick={() => toggleSideBySide(i)}
+                  disabled={
+                    busy !== null || i === 0 || (!section.sideBySide && rowSizeAbove(i) >= MAX_PER_ROW)
+                  }
+                  className={`p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                    section.sideBySide && i > 0
+                      ? "text-sky-700 bg-sky-50 hover:bg-sky-100"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                  title={
+                    section.sideBySide
+                      ? "Side by side with the section above: click to give it its own row"
+                      : `Put it next to the section above (up to ${MAX_PER_ROW} in a row)`
+                  }
+                >
+                  <Columns3 className="w-4 h-4" />
+                </button>
 
                 <button
                   onClick={() => toggleVisible(i)}

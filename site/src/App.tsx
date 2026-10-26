@@ -43,6 +43,7 @@ import {
   type SharedPackage,
 } from "./lib/homeSections";
 import { outboundSlug, track, trackSections } from "./lib/track";
+import { groupRows, rowColumns } from "../../personal-site/src/data/homeContent";
 
 type NavLink = { label: string; href: string };
 
@@ -1098,8 +1099,11 @@ export function App() {
   // the page, behind the hero wherever it is moved, gone when it is hidden.
   const heroOnTop = homepageLoading || visible[0]?.id === "hero";
   // The footer stays full width under the page while it is last.
-  const footerLast = visible[visible.length - 1]?.id === "footer";
+  const lastSection = visible[visible.length - 1];
+  const footerLast = lastSection?.id === "footer" && !lastSection.sideBySide;
   const inMain = footerLast ? visible.slice(0, -1) : visible;
+  // Sections marked "side by side" in Admin share a row with the one above.
+  const rows = groupRows(inMain);
 
   useEffect(() => {
     track("page");
@@ -1181,7 +1185,23 @@ export function App() {
         {/* Wait for the saved layout, so a section hidden or edited in Admin
             never flashes its default copy first. */}
         {!homepageLoading &&
-          inMain.map((s) => <Fragment key={s.id}>{renderSection(s.id)}</Fragment>)}
+          rows.map((row) =>
+            row.length === 1 ? (
+              <Fragment key={row[0].id}>{renderSection(row[0].id)}</Fragment>
+            ) : (
+              <div
+                key={row.map((s) => s.id).join("+")}
+                className="grid grid-cols-1 items-start gap-10 md:gap-6 md:[grid-template-columns:var(--row-cols)]"
+                style={{ "--row-cols": rowColumns(row.map((s) => s.id)) } as React.CSSProperties}
+              >
+                {row.map((s) => (
+                  <div key={s.id} className="min-w-0">
+                    {renderSection(s.id)}
+                  </div>
+                ))}
+              </div>
+            ),
+          )}
       </main>
       {!homepageLoading && footerLast && renderSection("footer")}
     </div>

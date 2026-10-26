@@ -392,7 +392,7 @@ export const SECTION_ANCHORS: Record<SectionId, string | null> = {
   footer: null,
 };
 
-export interface SectionEntry { id: SectionId; visible: boolean }
+export interface SectionEntry { id: SectionId; visible: boolean; sideBySide: boolean }
 
 export interface Homepage {
   sections: SectionEntry[];
@@ -407,6 +407,7 @@ function defaultSections(legacy: SiteSettings): SectionEntry[] {
     id,
     visible:
       id === "releases" ? legacy.releasesEnabled : id === "dreamless" ? legacy.dreamlessBannerEnabled : true,
+    sideBySide: false,
   }));
 }
 
@@ -423,10 +424,10 @@ export function mergeHomepage(stored: Record<string, unknown> | undefined, legac
   const seen = new Set<SectionId>();
   const sections: SectionEntry[] = [];
   for (const raw of rawSections) {
-    const s = raw as { id?: unknown; visible?: unknown };
+    const s = raw as { id?: unknown; visible?: unknown; sideBySide?: unknown };
     if (!isSectionId(s?.id) || seen.has(s.id)) continue;
     seen.add(s.id);
-    sections.push({ id: s.id, visible: s.visible !== false });
+    sections.push({ id: s.id, visible: s.visible !== false, sideBySide: s.sideBySide === true });
   }
   defaults.forEach((d, i) => {
     if (seen.has(d.id)) return;
