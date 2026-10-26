@@ -26,6 +26,7 @@ export const SECTION_IDS = [
   "founder",
   "contact",
   "newsletter",
+  "footer",
 ] as const;
 
 export type SectionId = (typeof SECTION_IDS)[number];
@@ -40,12 +41,14 @@ export const SECTION_LABELS: Record<SectionId, string> = {
   founder: "Founder",
   contact: "Contact form",
   newsletter: "Newsletter",
+  footer: "Footer",
 };
 
 export const SECTION_NOTES: Partial<Record<SectionId, string>> = {
   products: "The product cards themselves are edited in Products Configuration below.",
   releases: "Lists products that have a version set. Hidden by default.",
   contact: "The interest chips come from the visible products.",
+  footer: "Sits under the page while it is last; moved up, it sits between sections.",
 };
 
 /* ---- Colour and icon choices -------------------------------------------
@@ -162,6 +165,11 @@ export interface NewsletterContent {
   body: string;
 }
 
+export interface FooterContent {
+  brand: string;
+  copyright: string;
+}
+
 export interface SectionContent {
   hero: HeroContent;
   dreamless: DreamlessContent;
@@ -172,6 +180,7 @@ export interface SectionContent {
   founder: FounderContent;
   contact: HeadingContent;
   newsletter: NewsletterContent;
+  footer: FooterContent;
 }
 
 export const DEFAULT_CONTENT: SectionContent = {
@@ -317,6 +326,10 @@ export const DEFAULT_CONTENT: SectionContent = {
     title: "Stay Updated",
     body: "Subscribe to the PlantagoAI newsletter for project updates, launches, and insights.",
   },
+  footer: {
+    brand: "PlantagoAI",
+    copyright: "Copyright © {year} PlantagoAI — All Rights Reserved.",
+  },
 };
 
 /** The anchor each section scrolls to from the nav (null: not in the nav). */
@@ -330,6 +343,7 @@ export const SECTION_ANCHORS: Record<SectionId, string | null> = {
   founder: "founder",
   contact: "contact",
   newsletter: null,
+  footer: null,
 };
 
 export interface SectionEntry { id: SectionId; visible: boolean }
@@ -568,5 +582,9 @@ export const SECTION_FIELDS: Record<SectionId, FieldDef[]> = {
   newsletter: [
     { key: "title", label: "Title", kind: "text" },
     { key: "body", label: "Text", kind: "textarea" },
+  ],
+  footer: [
+    { key: "brand", label: "Name next to the logo", kind: "text", hint: "Leave empty to hide the logo row." },
+    { key: "copyright", label: "Copyright line", kind: "text", hint: "{year} becomes the current year." },
   ],
 };

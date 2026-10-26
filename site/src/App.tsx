@@ -37,6 +37,7 @@ import {
   type PlatformContent,
   type FounderContent,
   type NewsletterContent,
+  type FooterContent,
   type SharedPackage,
 } from "./lib/homeSections";
 import { outboundSlug, track, trackSections } from "./lib/track";
@@ -951,26 +952,30 @@ function Newsletter({ content }: { content: NewsletterContent }) {
   );
 }
 
-function Footer() {
+function Footer({ content }: { content: FooterContent }) {
   return (
     <footer className="border-t border-border mt-10">
       <div className="max-w-5xl mx-auto px-4 py-10">
-        <div className="flex items-center justify-center">
-          <div className="flex items-center gap-2.5">
-            <img
-              src="/plantago-logo.png"
-              alt="PlantagoAI"
-              className="h-8 w-auto"
-            />
-            <span className="font-semibold text-base tracking-wide">PlantagoAI</span>
+        {content.brand && (
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/plantago-logo.png"
+                alt="PlantagoAI"
+                className="h-8 w-auto"
+              />
+              <span className="font-semibold text-base tracking-wide">{content.brand}</span>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="mt-6 pt-6 border-t border-border text-center">
-          <p className="text-sm text-muted-foreground">
-            Copyright &copy; {new Date().getFullYear()} PlantagoAI &mdash; All Rights Reserved.
-          </p>
-        </div>
+        {content.copyright && (
+          <div className={content.brand ? "mt-6 pt-6 border-t border-border text-center" : "text-center"}>
+            <p className="text-sm text-muted-foreground">
+              {content.copyright.replace(/\{year\}/g, String(new Date().getFullYear()))}
+            </p>
+          </div>
+        )}
       </div>
     </footer>
   );
@@ -1009,6 +1014,9 @@ export function App() {
   // The pastel band belongs to the hero: behind the nav while the hero leads
   // the page, behind the hero wherever it is moved, gone when it is hidden.
   const heroOnTop = homepageLoading || visible[0]?.id === "hero";
+  // The footer stays full width under the page while it is last.
+  const footerLast = visible[visible.length - 1]?.id === "footer";
+  const inMain = footerLast ? visible.slice(0, -1) : visible;
 
   useEffect(() => {
     track("page");
@@ -1073,6 +1081,8 @@ export function App() {
         return <ContactForm content={content.contact} projects={projects} />;
       case "newsletter":
         return <Newsletter content={content.newsletter} />;
+      case "footer":
+        return <Footer content={content.footer} />;
     }
   };
 
@@ -1084,9 +1094,9 @@ export function App() {
         {/* Wait for the saved layout, so a section hidden or edited in Admin
             never flashes its default copy first. */}
         {!homepageLoading &&
-          visible.map((s) => <Fragment key={s.id}>{renderSection(s.id)}</Fragment>)}
+          inMain.map((s) => <Fragment key={s.id}>{renderSection(s.id)}</Fragment>)}
       </main>
-      <Footer />
+      {!homepageLoading && footerLast && renderSection("footer")}
     </div>
   );
 }
