@@ -41,14 +41,14 @@ export default function Chat({ content }: { content: PersonalContent["chat"] }) 
 
   return (
     <section id="chat" className="border-t border-border bg-surface/30 py-20">
-      <div className="container-prose">
+      <div className="container-wide">
         <p className="text-meta uppercase tracking-[0.18em]">
           <span className="inline-flex items-center gap-1.5">
             <Sparkles size={12} /> {content.eyebrow}
           </span>
         </p>
         <h2 className="heading-section mt-2">{content.title}</h2>
-        {content.body && <p className="mt-3 text-muted">{content.body}</p>}
+        {content.body && <p className="mt-3 max-w-2xl text-muted">{content.body}</p>}
         <div className="mt-8 rounded-2xl border border-border bg-bg">
           <div
             ref={scrollerRef}

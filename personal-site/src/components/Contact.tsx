@@ -33,10 +33,10 @@ export default function Contact({ content }: { content: PersonalContent["contact
 
   return (
     <section id="contact" className="border-t border-border py-20">
-      <div className="container-prose">
+      <div className="container-wide">
         <p className="text-meta uppercase tracking-[0.18em]">{content.eyebrow}</p>
         <h2 className="heading-section mt-2">{content.title}</h2>
-        {content.body && <p className="mt-3 text-muted">{content.body}</p>}
+        {content.body && <p className="mt-3 max-w-2xl text-muted">{content.body}</p>}
         <form onSubmit={submit} className="mt-8 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <input
