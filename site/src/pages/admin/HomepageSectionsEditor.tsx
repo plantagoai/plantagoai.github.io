@@ -6,6 +6,7 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
+  ImageUp,
   LayoutList,
   Loader2,
   Plus,
@@ -219,7 +220,7 @@ function summary(value: unknown): string {
   if (Array.isArray(c.titleWords) && c.titleWords.every((w) => typeof w === "string")) {
     return (c.titleWords as string[]).join(", ");
   }
-  const text = [c.title, c.name, c.badge, c.lead, c.titleLead, c.eyebrow, c.copyright, c.body].find(
+  const text = [c.title, c.name, c.caption, c.badge, c.lead, c.titleLead, c.eyebrow, c.copyright, c.body].find(
     (v) => typeof v === "string" && v,
   );
   return (text as string | undefined) ?? "";
@@ -329,6 +330,16 @@ function Fields({
                 />
               </Field>
             );
+          case "image":
+            return (
+              <ImageField
+                key={field.key}
+                label={field.label}
+                hint={field.hint}
+                value={(current as string) ?? ""}
+                onChange={(v) => set(field.key, v)}
+              />
+            );
           case "textarea":
             return (
               <Field key={field.key} label={field.label} hint={field.hint}>
@@ -380,6 +391,114 @@ function Fields({
         }
       })}
     </>
+  );
+}
+
+/* A picture: shown as a preview, replaced by uploading a file or pasting a
+   link. An upload is shrunk in the browser to a JPEG and kept in the section
+   itself as a data: URL, so it goes live on Save with no Storage bucket or
+   extra deploy. Firestore caps a document near 1 MB, hence the size steps. */
+const MAX_IMAGE_SIDE = 800;
+const MAX_IMAGE_CHARS = 350_000;
+
+async function shrinkImage(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(bitmap.width, bitmap.height));
+  let w = Math.round(bitmap.width * scale);
+  let h = Math.round(bitmap.height * scale);
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("This browser can't resize images");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const url = canvas.toDataURL("image/jpeg", 0.85);
+    if (url.length <= MAX_IMAGE_CHARS) return url;
+    w = Math.round(w * 0.8);
+    h = Math.round(h * 0.8);
+  }
+  throw new Error("That image is too large even after resizing");
+}
+
+function ImageField({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const isUpload = value.startsWith("data:");
+
+  const pick = async (file: File | undefined) => {
+    if (!file) return;
+    setError(null);
+    setBusy(true);
+    try {
+      onChange(await shrinkImage(file));
+    } catch (e: any) {
+      setError(e.message || "Couldn't read that image");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div>
+      <span className="block text-xs font-medium text-muted-foreground mb-1">{label}</span>
+      <div className="flex items-start gap-3">
+        <div className="h-24 w-24 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
+          {value ? (
+            <img src={value} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="flex h-full items-center justify-center text-[11px] text-muted-foreground">No photo</span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0 space-y-2">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
+            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageUp className="w-3.5 h-3.5" />}
+            {value ? "Replace photo" : "Upload photo"}
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              disabled={busy}
+              onChange={(e) => {
+                pick(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="ml-2 inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="w-3 h-3" />
+              Remove
+            </button>
+          )}
+          <input
+            type="text"
+            value={isUpload ? "" : value}
+            placeholder={isUpload ? "Uploaded photo (paste a link to use one instead)" : "or paste an image link"}
+            onChange={(e) => onChange(e.target.value)}
+            className={inputClass}
+          />
+          {error && <p className="text-[11px] text-red-700">{error}</p>}
+          {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+        </div>
+      </div>
+    </div>
   );
 }
 

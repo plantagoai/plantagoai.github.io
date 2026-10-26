@@ -1,6 +1,8 @@
 import { Fragment, useEffect } from "react";
 import Hero from "./components/Hero";
 import DreamlessBanner from "./components/DreamlessBanner";
+import Photo from "./components/Photo";
+import Statement from "./components/Statement";
 import FoundationCard from "./components/FoundationCard";
 import Dreamless from "./components/Dreamless";
 import Pillars from "./components/Pillars";
@@ -53,6 +55,10 @@ export default function App() {
         return <DreamlessBanner content={content.dreamlessBanner} />;
       case "hero":
         return <Hero content={content.hero} first={firstId === "hero"} />;
+      case "photo":
+        return <Photo content={content.photo} />;
+      case "statement":
+        return <Statement content={content.statement} />;
       case "foundationCard":
         return <FoundationCard content={content.foundationCard} />;
       case "dreamless":

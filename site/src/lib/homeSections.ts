@@ -19,10 +19,12 @@ import { DEFAULT_SETTINGS, useSiteSettings, type SiteSettings } from "./siteSett
 export const SECTION_IDS = [
   "hero",
   "dreamless",
+  "statement",
   "about",
   "products",
   "releases",
   "platform",
+  "photo",
   "founder",
   "contact",
   "newsletter",
@@ -34,10 +36,12 @@ export type SectionId = (typeof SECTION_IDS)[number];
 export const SECTION_LABELS: Record<SectionId, string> = {
   hero: "Hero",
   dreamless: "Dreamless banner",
+  statement: "Director's statement",
   about: "About",
   products: "Products",
   releases: "Releases",
   platform: "Platform",
+  photo: "Photo of Dagan",
   founder: "Founder",
   contact: "Contact form",
   newsletter: "Newsletter",
@@ -49,6 +53,8 @@ export const SECTION_NOTES: Partial<Record<SectionId, string>> = {
   releases: "Lists products that have a version set. Hidden by default.",
   contact: "The interest chips come from the visible products.",
   footer: "Sits under the page while it is last; moved up, it sits between sections.",
+  statement: "From the Dreamless press kit. Leave the photo empty to sign without one.",
+  photo: "Upload a new photo to replace it; it is resized in the browser and saved with the section.",
 };
 
 /* ---- Colour and icon choices -------------------------------------------
@@ -160,6 +166,23 @@ export interface FounderContent {
   cards: InfoCard[];
 }
 
+export interface StatementContent {
+  eyebrow: string;
+  title: string;
+  paragraphs: string[];
+  signature: string;
+  signatureRole: string;
+  image: string;
+  linkLabel: string;
+  url: string;
+}
+
+export interface PhotoContent {
+  image: string;
+  imageAlt: string;
+  caption: string;
+}
+
 export interface NewsletterContent {
   title: string;
   body: string;
@@ -173,10 +196,12 @@ export interface FooterContent {
 export interface SectionContent {
   hero: HeroContent;
   dreamless: DreamlessContent;
+  statement: StatementContent;
   about: AboutContent;
   products: HeadingContent;
   releases: HeadingContent;
   platform: PlatformContent;
+  photo: PhotoContent;
   founder: FounderContent;
   contact: HeadingContent;
   newsletter: NewsletterContent;
@@ -217,6 +242,20 @@ export const DEFAULT_CONTENT: SectionContent = {
     image: "/dreamless-poster.webp",
     imageAlt:
       "Dreamless: The Hush poster — Kai and his robot Tofu on a balcony above a sleeping city at night",
+  },
+  statement: {
+    eyebrow: "Director's statement",
+    title: "Dreamless: The Hush",
+    paragraphs: [
+      "Kai carries something he doesn't talk about. He didn't choose it. What he chose was to stop dreaming, because in his dreams it was always waiting.",
+      "When the world falls into the Hush, that choice leaves him awake, keeping watch over a city that sleeps. He brings food to sleeping neighbours, sits with them, and listens.",
+      "Dreamless is about compassion as a quiet, daily act, and about healing that can't be skipped. Sooner or later, Kai has to go back to the place he fled and face what is there. I wanted to tell it slowly, one minute a day, each episode ending on a haiku.",
+    ],
+    signature: "Dagan Gilat",
+    signatureRole: "Creator and director",
+    image: "/dagan-gilat.jpg",
+    linkLabel: "Watch the series",
+    url: "https://dreamless.micromedia-ai.com",
   },
   about: {
     navLabel: "About",
@@ -297,6 +336,11 @@ export const DEFAULT_CONTENT: SectionContent = {
     repoBody:
       "Select packages (`flows`, `legal`, `seeders`) are strong candidates for open-source release. Get in touch if interested.",
   },
+  photo: {
+    image: "/dagan-gilat.jpg",
+    imageAlt: "Dagan Gilat",
+    caption: "Dagan Gilat, founder of PlantagoAI",
+  },
   founder: {
     navLabel: "Founder",
     eyebrow: "Founder",
@@ -336,10 +380,12 @@ export const DEFAULT_CONTENT: SectionContent = {
 export const SECTION_ANCHORS: Record<SectionId, string | null> = {
   hero: null,
   dreamless: null,
+  statement: null,
   about: "about",
   products: "products",
   releases: "releases",
   platform: "platform",
+  photo: null,
   founder: "founder",
   contact: "contact",
   newsletter: null,
@@ -466,7 +512,7 @@ export async function saveSectionContent<K extends SectionId>(
    Drives the generic editor in Admin → Homepage sections. */
 
 export type FieldDef =
-  | { key: string; label: string; kind: "text" | "textarea" | "url"; hint?: string }
+  | { key: string; label: string; kind: "text" | "textarea" | "url" | "image"; hint?: string }
   | { key: string; label: string; kind: "paragraphs" | "lines"; hint?: string }
   | { key: string; label: string; kind: "select"; options: readonly string[]; hint?: string }
   | { key: string; label: string; kind: "list"; itemLabel: string; fields: FieldDef[]; blank: Record<string, unknown>; hint?: string };
@@ -537,6 +583,16 @@ export const SECTION_FIELDS: Record<SectionId, FieldDef[]> = {
     { key: "image", label: "Poster image URL", kind: "text" },
     { key: "imageAlt", label: "Poster description (alt text)", kind: "text" },
   ],
+  statement: [
+    eyebrowField,
+    { key: "title", label: "Title", kind: "text" },
+    { key: "paragraphs", label: "Statement", kind: "paragraphs", hint: "Separate paragraphs with a blank line." },
+    { key: "signature", label: "Signed by", kind: "text" },
+    { key: "signatureRole", label: "Role under the name", kind: "text" },
+    { key: "image", label: "Photo next to the signature", kind: "image" },
+    { key: "linkLabel", label: "Link label", kind: "text", hint: "Leave empty to hide the link." },
+    { key: "url", label: "Link", kind: "url" },
+  ],
   about: [
     navField,
     eyebrowField,
@@ -570,6 +626,11 @@ export const SECTION_FIELDS: Record<SectionId, FieldDef[]> = {
     { key: "reuseFootnote", label: "Reuse table footnote", kind: "textarea", hint: "Wrap code in `backticks`." },
     { key: "repoTitle", label: "Repository note title", kind: "text" },
     { key: "repoBody", label: "Repository note text", kind: "textarea", hint: "Wrap code in `backticks`." },
+  ],
+  photo: [
+    { key: "image", label: "Photo", kind: "image" },
+    { key: "imageAlt", label: "Photo description (alt text)", kind: "text" },
+    { key: "caption", label: "Caption", kind: "textarea", hint: "Leave empty for no caption." },
   ],
   founder: [
     navField,
