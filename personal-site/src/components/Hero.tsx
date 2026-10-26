@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { MessageCircle, ArrowDown } from "lucide-react";
 import type { PersonalContent } from "../data/homeContent";
@@ -41,9 +41,12 @@ function AnimatedTitle({ words }: { words: string[] }) {
 export default function Hero({
   content,
   first,
+  aside,
 }: {
   content: PersonalContent["hero"];
   first: boolean;
+  /** Shown beside the text on wide screens, under it on phones (the photo). */
+  aside?: ReactNode;
 }) {
   return (
     <section className="relative isolate overflow-hidden">
@@ -52,7 +55,7 @@ export default function Hero({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="grid items-center gap-12"
+          className={`grid items-center gap-12 ${aside ? "md:grid-cols-[minmax(0,1fr)_auto]" : ""}`}
         >
           <div>
             {content.eyebrow && (
@@ -89,6 +92,7 @@ export default function Hero({
               </div>
             )}
           </div>
+          {aside}
         </motion.div>
       </div>
     </section>

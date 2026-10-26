@@ -1,8 +1,28 @@
 import { motion } from "framer-motion";
 import type { PersonalContent } from "../data/homeContent";
 
-export default function Photo({ content }: { content: PersonalContent["photo"] }) {
+/** The photo with its caption. `inline` is the hero's version: no section of
+ *  its own, the caption under the picture. */
+export default function Photo({ content, inline = false }: { content: PersonalContent["photo"]; inline?: boolean }) {
   if (!content.image) return null;
+  if (inline) {
+    return (
+      <figure className="flex flex-col items-start gap-4 md:items-center">
+        <img
+          src={content.image}
+          alt={content.imageAlt}
+          width={460}
+          height={460}
+          className="h-56 w-56 rounded-3xl border border-border object-cover shadow-xl md:h-72 md:w-72"
+        />
+        {content.caption && (
+          <figcaption className="max-w-[18rem] whitespace-pre-line text-sm font-medium text-ink/75 md:text-center">
+            {content.caption}
+          </figcaption>
+        )}
+      </figure>
+    );
+  }
   return (
     <section className="pb-12 pt-2">
       <div className="container-wide">
