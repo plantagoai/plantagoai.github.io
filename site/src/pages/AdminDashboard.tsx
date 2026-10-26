@@ -19,9 +19,10 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ProjectsEditor } from "./admin/ProjectsEditor";
-import { SiteSettingsPanel } from "./admin/SiteSettingsPanel";
+import { HomepageSectionsEditor } from "./admin/HomepageSectionsEditor";
 import { ScheduledJobsPanel } from "./admin/ScheduledJobsPanel";
 import { seedDefaultsIfEmpty, useProjects, getIconComponent, COLORS } from "../lib/projects";
+import { seedHomepageIfMissing } from "../lib/homeSections";
 import { logAdminLogin } from "../lib/analytics";
 import { markAdminBrowser } from "../lib/track";
 import { AnalyticsPanel } from "./admin/AnalyticsPanel";
@@ -739,6 +740,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (isAdmin) {
       seedDefaultsIfEmpty().catch(() => {});
+      seedHomepageIfMissing().catch(() => {});
     }
   }, [isAdmin]);
 
@@ -800,8 +802,8 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Site-level section toggles */}
-        <SiteSettingsPanel />
+        {/* Homepage sections: copy, order and visibility */}
+        <HomepageSectionsEditor />
         <ScheduledJobsPanel />
 
         {/* Projects configuration (CMS) */}
