@@ -36,6 +36,8 @@ import {
   type HeadingContent,
   type PlatformContent,
   type FounderContent,
+  type PhotoContent,
+  type StatementContent,
   type NewsletterContent,
   type FooterContent,
   type SharedPackage,
@@ -282,6 +284,87 @@ function DreamlessBanner({ content }: { content: DreamlessContent }) {
           )}
         </div>
       </a>
+    </section>
+  );
+}
+
+function Statement({ content }: { content: StatementContent }) {
+  return (
+    <section aria-label={content.eyebrow || content.title} className="scroll-mt-20">
+      <figure className="relative overflow-hidden rounded-xl border border-border bg-card p-6 md:p-10 shadow-elevation-1">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-6 -top-4 select-none font-serif text-[10rem] leading-none text-teal-100"
+        >
+          &ldquo;
+        </span>
+        <div className="relative">
+          {content.eyebrow && <p className="eyebrow mb-2">{content.eyebrow}</p>}
+          {content.title && (
+            <h2 className="font-semibold text-2xl md:text-3xl text-foreground">{content.title}</h2>
+          )}
+          <blockquote className="mt-5 space-y-4 border-l-2 border-teal-300 pl-5 max-w-2xl">
+            {content.paragraphs.map((p, i) => (
+              <p key={i} className="text-base md:text-lg italic text-foreground/80 leading-relaxed">
+                {p}
+              </p>
+            ))}
+          </blockquote>
+          <figcaption className="mt-6 flex flex-wrap items-center gap-4">
+            {content.image && (
+              <img
+                src={content.image}
+                alt={content.signature}
+                width={56}
+                height={56}
+                loading="lazy"
+                className="h-14 w-14 rounded-full object-cover border border-border"
+              />
+            )}
+            <div className="mr-auto">
+              {content.signature && <p className="font-semibold text-foreground">{content.signature}</p>}
+              {content.signatureRole && (
+                <p className="text-sm text-muted-foreground">{content.signatureRole}</p>
+              )}
+            </div>
+            {content.linkLabel && content.url && (
+              <a
+                href={content.url}
+                data-track="dreamless"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:text-teal-900"
+              >
+                {content.linkLabel}
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            )}
+          </figcaption>
+        </div>
+      </figure>
+    </section>
+  );
+}
+
+function Photo({ content }: { content: PhotoContent }) {
+  if (!content.image) return null;
+  return (
+    <section aria-label={content.imageAlt || "Photo"} className="scroll-mt-20">
+      <figure className="flex flex-col items-center gap-4 sm:flex-row sm:gap-8 rounded-xl border border-border bg-card p-5 md:p-6 shadow-elevation-1">
+        <img
+          src={content.image}
+          alt={content.imageAlt}
+          width={460}
+          height={460}
+          loading="lazy"
+          className="h-48 w-48 md:h-56 md:w-56 shrink-0 rounded-xl object-cover"
+        />
+        {content.caption && (
+          <figcaption className="text-center sm:text-left text-lg md:text-xl font-medium text-foreground leading-snug whitespace-pre-line">
+            {content.caption}
+          </figcaption>
+        )}
+      </figure>
     </section>
   );
 }
@@ -1075,6 +1158,10 @@ export function App() {
         return <Releases content={content.releases} projects={projects} />;
       case "platform":
         return <Platform content={content.platform} projects={projects} />;
+      case "statement":
+        return <Statement content={content.statement} />;
+      case "photo":
+        return <Photo content={content.photo} />;
       case "founder":
         return <Founder content={content.founder} />;
       case "contact":

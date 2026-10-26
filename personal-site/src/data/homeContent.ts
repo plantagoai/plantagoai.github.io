@@ -10,6 +10,8 @@
 export const PERSONAL_SECTION_IDS = [
   "dreamlessBanner",
   "hero",
+  "photo",
+  "statement",
   "foundationCard",
   "dreamless",
   "pillars",
@@ -26,6 +28,8 @@ export type PersonalSectionId = (typeof PERSONAL_SECTION_IDS)[number];
 export const PERSONAL_SECTION_LABELS: Record<PersonalSectionId, string> = {
   dreamlessBanner: "Dreamless banner",
   hero: "Hero",
+  photo: "Photo of Dagan",
+  statement: "Director's statement (Dreamless)",
   foundationCard: "Foundation card (Your Voice. Share. Market.)",
   dreamless: "Dreamless intro (older wide banner)",
   pillars: "Three pillars",
@@ -41,6 +45,8 @@ export const PERSONAL_SECTION_NOTES: Partial<Record<PersonalSectionId, string>> 
   floatingChat: "The round button in the bottom-right corner. Its place in the list doesn't matter.",
   dreamless: "The section that was on the page before the banner. Hidden by default.",
   foundationCard: "Hidden since the hero was shortened; show it to bring the card back.",
+  statement: "From the Dreamless press kit. Leave the photo empty to sign without one.",
+  photo: "Upload a new photo to replace it; it is resized in the browser and saved with the section.",
 };
 
 /** Colours from the site's palette. */
@@ -84,6 +90,21 @@ export interface PersonalContent {
     primaryHref: string;
     secondaryLabel: string;
     secondaryHref: string;
+  };
+  photo: {
+    image: string;
+    imageAlt: string;
+    caption: string;
+  };
+  statement: {
+    eyebrow: string;
+    title: string;
+    paragraphs: string[];
+    signature: string;
+    signatureRole: string;
+    image: string;
+    linkLabel: string;
+    url: string;
   };
   foundationCard: {
     eyebrow: string;
@@ -178,6 +199,25 @@ export const PERSONAL_DEFAULTS: PersonalContent = {
     primaryHref: "#chat",
     secondaryLabel: "See the work",
     secondaryHref: "#timeline",
+  },
+  photo: {
+    image: "/dagan-gilat.jpg",
+    imageAlt: "Dagan Gilat",
+    caption: "Dagan Gilat · Founder, architect, researcher",
+  },
+  statement: {
+    eyebrow: "Director's statement",
+    title: "Dreamless: The Hush",
+    paragraphs: [
+      "Kai carries something he doesn't talk about. He didn't choose it. What he chose was to stop dreaming, because in his dreams it was always waiting.",
+      "When the world falls into the Hush, that choice leaves him awake, keeping watch over a city that sleeps. He brings food to sleeping neighbours, sits with them, and listens.",
+      "Dreamless is about compassion as a quiet, daily act, and about healing that can't be skipped. Sooner or later, Kai has to go back to the place he fled and face what is there. I wanted to tell it slowly, one minute a day, each episode ending on a haiku.",
+    ],
+    signature: "Dagan Gilat",
+    signatureRole: "Creator and director",
+    image: "/dagan-gilat.jpg",
+    linkLabel: "Watch the series",
+    url: "https://dreamless.micromedia-ai.com",
   },
   foundationCard: {
     eyebrow: "Foundation",
@@ -394,6 +434,8 @@ export const PERSONAL_DEFAULTS: PersonalContent = {
 export const PERSONAL_ANCHORS: Record<PersonalSectionId, string | null> = {
   dreamlessBanner: null,
   hero: null,
+  photo: null,
+  statement: "statement",
   foundationCard: null,
   dreamless: "dreamless",
   pillars: "pillars",
@@ -450,7 +492,7 @@ export function mergePersonalHome(stored: Record<string, unknown> | undefined): 
 /* ---- Admin form schema (same shape as site/src/lib/homeSections.ts) ---- */
 
 type Field =
-  | { key: string; label: string; kind: "text" | "textarea" | "url" | "lines" | "paragraphs"; hint?: string }
+  | { key: string; label: string; kind: "text" | "textarea" | "url" | "lines" | "paragraphs" | "image"; hint?: string }
   | { key: string; label: string; kind: "select"; options: readonly string[]; hint?: string }
   | { key: string; label: string; kind: "list"; itemLabel: string; fields: Field[]; blank: Record<string, unknown>; hint?: string };
 
@@ -487,6 +529,21 @@ export const PERSONAL_FIELDS: Record<PersonalSectionId, Field[]> = {
     { key: "primaryHref", label: "Main button link", kind: "text" },
     { key: "secondaryLabel", label: "Second button label", kind: "text", hint: "Leave empty to hide the button." },
     { key: "secondaryHref", label: "Second button link", kind: "text" },
+  ],
+  photo: [
+    { key: "image", label: "Photo", kind: "image" },
+    { key: "imageAlt", label: "Photo description (alt text)", kind: "text" },
+    { key: "caption", label: "Caption", kind: "textarea", hint: "Leave empty for no caption." },
+  ],
+  statement: [
+    { key: "eyebrow", label: "Eyebrow", kind: "text" },
+    { key: "title", label: "Title", kind: "text" },
+    { key: "paragraphs", label: "Statement", kind: "paragraphs", hint: `Separate paragraphs with a blank line. ${LINK_HINT}` },
+    { key: "signature", label: "Signed by", kind: "text" },
+    { key: "signatureRole", label: "Role under the name", kind: "text" },
+    { key: "image", label: "Photo next to the signature", kind: "image" },
+    { key: "linkLabel", label: "Link label", kind: "text", hint: "Leave empty to hide the link." },
+    { key: "url", label: "Link", kind: "url" },
   ],
   foundationCard: [
     { key: "eyebrow", label: "Eyebrow", kind: "text" },
