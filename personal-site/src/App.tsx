@@ -5,7 +5,7 @@ import Photo from "./components/Photo";
 import Statement from "./components/Statement";
 import FoundationCard from "./components/FoundationCard";
 import Dreamless from "./components/Dreamless";
-import Pillars from "./components/Pillars";
+import Pillars, { PillarsHeading } from "./components/Pillars";
 import Timeline from "./components/Timeline";
 import Games from "./components/Games";
 import Chat from "./components/Chat";
@@ -30,6 +30,11 @@ export default function App() {
   // (up to three). The floating button sits outside the page flow.
   const rows = groupRows(visible.filter((s) => s.id !== "floatingChat"));
   const floating = visible.some((s) => s.id === "floatingChat");
+  // The "Three pillars" heading joins the products when it sits right above
+  // them on rows of their own, so the default page reads as one section.
+  const headingRow = rows.findIndex((r) => r.length === 1 && r[0].id === "pillarsHeading");
+  const headingJoins =
+    headingRow >= 0 && rows[headingRow + 1]?.length === 1 && rows[headingRow + 1][0].id === "pillars";
 
   useEffect(() => {
     track("page");
@@ -67,8 +72,10 @@ export default function App() {
         return <FoundationCard content={content.foundationCard} />;
       case "dreamless":
         return <Dreamless content={content.dreamless} />;
+      case "pillarsHeading":
+        return headingJoins ? null : <PillarsHeading content={content.pillarsHeading} />;
       case "pillars":
-        return <Pillars content={content.pillars} />;
+        return <Pillars content={content.pillars} heading={headingJoins ? content.pillarsHeading : null} />;
       case "timeline":
         return <Timeline content={content.timeline} />;
       case "games":

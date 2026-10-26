@@ -174,3 +174,7 @@ html {
    computed to position:relative and scrolled away.) The header carries its
    own z-50, so it still paints above the field. */
 .mesh-hero > :not(.mesh-field):not(header) { position: relative; z-index: 1; }
+
+/* The product carousel's timer bar. */
+.carousel-progress { width: 100%; transform-origin: left; animation: carousel-progress linear forwards; }
+@keyframes carousel-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }

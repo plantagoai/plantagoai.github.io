@@ -67,6 +67,34 @@ describe("What I'm building", () => {
     expect(mergePersonalHome({ content: { pillars: { source: "cards" } } }).content.pillars.source).toBe("cards");
   });
 
+  it("splits the Three pillars heading into its own section, right above the products", () => {
+    const ids = (h: ReturnType<typeof mergePersonalHome>) => h.sections.map((s) => s.id);
+    const fresh = ids(mergePersonalHome(undefined));
+    expect(fresh.indexOf("pillarsHeading")).toBe(fresh.indexOf("pillars") - 1);
+    // Saved before the split, with the products moved up: the heading follows them.
+    const moved = ids(
+      mergePersonalHome({
+        sections: [
+          { id: "pillars", visible: true },
+          { id: "hero", visible: true },
+          { id: "dreamless", visible: false },
+        ],
+      }),
+    );
+    expect(moved.indexOf("pillarsHeading")).toBe(moved.indexOf("pillars") - 1);
+  });
+
+  it("keeps a heading edited before the split", () => {
+    const home = mergePersonalHome({ content: { pillars: { eyebrow: "Now building", source: "cards" } } });
+    expect(home.content.pillarsHeading.eyebrow).toBe("Now building");
+    expect(home.content.pillarsHeading.titleLead).toBe(PERSONAL_DEFAULTS.pillarsHeading.titleLead);
+    expect(home.content.pillars.source).toBe("cards");
+    const saved = mergePersonalHome({
+      content: { pillars: { eyebrow: "Old" }, pillarsHeading: { eyebrow: "New" } },
+    });
+    expect(saved.content.pillarsHeading.eyebrow).toBe("New");
+  });
+
   it("reads the seconds field leniently", () => {
     expect(rotationSeconds("10")).toBe(10);
     expect(rotationSeconds("")).toBe(7);

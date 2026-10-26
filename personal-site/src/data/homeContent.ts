@@ -14,6 +14,7 @@ export const PERSONAL_SECTION_IDS = [
   "statement",
   "foundationCard",
   "dreamless",
+  "pillarsHeading",
   "pillars",
   "timeline",
   "games",
@@ -32,7 +33,8 @@ export const PERSONAL_SECTION_LABELS: Record<PersonalSectionId, string> = {
   statement: "Director's statement (Dreamless)",
   foundationCard: "Foundation card (Your Voice. Share. Market.)",
   dreamless: "Dreamless intro (older wide banner)",
-  pillars: "Three pillars",
+  pillarsHeading: "Three pillars heading",
+  pillars: "What I'm building (products)",
   timeline: "Career timeline",
   games: "Games",
   chat: "Chat with my AI",
@@ -46,6 +48,7 @@ export const PERSONAL_SECTION_NOTES: Partial<Record<PersonalSectionId, string>> 
   dreamless: "The section that was on the page before the banner. Hidden by default.",
   foundationCard: "Hidden since the hero was shortened; show it to bring the card back.",
   statement: "From the Dreamless press kit. Leave the photo empty to sign without one.",
+  pillarsHeading: "\"What I'm building · Three pillars — Voice. Share. Market.\" Hide it to show the products on their own.",
   photo: "Upload a new photo to replace it; it is resized in the browser and saved with the section.",
 };
 
@@ -134,13 +137,15 @@ export interface PersonalContent {
     secondaryLabel: string;
     secondaryUrl: string;
   };
-  pillars: {
+  pillarsHeading: {
     eyebrow: string;
-    source: PillarsSource;
-    rotateSeconds: string;
     titleLead: string;
     titleWords: ColoredWord[];
     titleTail: string;
+  };
+  pillars: {
+    source: PillarsSource;
+    rotateSeconds: string;
     cards: { name: string; tone: PersonalTone; icon: PersonalIcon; blurb: string; handle: string; href: string }[];
     footnote: string;
   };
@@ -257,10 +262,8 @@ export const PERSONAL_DEFAULTS: PersonalContent = {
     secondaryLabel: "Press kit",
     secondaryUrl: "https://dreamless.micromedia-ai.com/#press",
   },
-  pillars: {
+  pillarsHeading: {
     eyebrow: "What I'm building",
-    source: "products",
-    rotateSeconds: "7",
     titleLead: "Three pillars —",
     titleWords: [
       { text: "Voice.", tone: "voice" },
@@ -268,6 +271,10 @@ export const PERSONAL_DEFAULTS: PersonalContent = {
       { text: "Market.", tone: "market" },
     ],
     titleTail: "— on shared infrastructure, on Solana.",
+  },
+  pillars: {
+    source: "products",
+    rotateSeconds: "7",
     cards: [
       {
         name: "Your Voice",
@@ -451,6 +458,7 @@ export const PERSONAL_ANCHORS: Record<PersonalSectionId, string | null> = {
   statement: "statement",
   foundationCard: null,
   dreamless: "dreamless",
+  pillarsHeading: null,
   pillars: "pillars",
   timeline: "timeline",
   games: "games",
@@ -461,6 +469,16 @@ export const PERSONAL_ANCHORS: Record<PersonalSectionId, string | null> = {
 };
 
 const HIDDEN_BY_DEFAULT: PersonalSectionId[] = ["foundationCard", "dreamless"];
+/** New sections that belong right above another one wherever it was moved,
+ *  rather than after their default predecessor. */
+const NEW_SECTION_BEFORE: Partial<Record<PersonalSectionId, PersonalSectionId>> = {
+  pillarsHeading: "pillars",
+};
+/** Fields that moved out of one section into a new one, read from the old
+ *  section until the new one is saved. */
+const MOVED_FIELDS: Partial<Record<PersonalSectionId, { from: PersonalSectionId; keys: string[] }>> = {
+  pillarsHeading: { from: "pillars", keys: ["eyebrow", "titleLead", "titleWords", "titleTail"] },
+};
 /** Sections that start next to the one above them: the photo beside the hero. */
 const SIDE_BY_SIDE_BY_DEFAULT: PersonalSectionId[] = ["photo"];
 
@@ -495,6 +513,12 @@ export function mergePersonalHome(stored: Record<string, unknown> | undefined): 
   }
   defaults.forEach((d, i) => {
     if (seen.has(d.id)) return;
+    const before = NEW_SECTION_BEFORE[d.id];
+    if (before && seen.has(before)) {
+      sections.splice(sections.findIndex((s) => s.id === before), 0, d);
+      seen.add(d.id);
+      return;
+    }
     const prev = defaults.slice(0, i).reverse().find((p) => seen.has(p.id));
     const at = prev ? sections.findIndex((s) => s.id === prev.id) + 1 : 0;
     sections.splice(at, 0, d);
@@ -504,7 +528,13 @@ export function mergePersonalHome(stored: Record<string, unknown> | undefined): 
   const storedContent = (stored?.content ?? {}) as Partial<Record<PersonalSectionId, Record<string, unknown>>>;
   const content = {} as Record<PersonalSectionId, unknown>;
   for (const id of PERSONAL_SECTION_IDS) {
-    content[id] = { ...PERSONAL_DEFAULTS[id], ...(storedContent[id] ?? {}) };
+    let own = storedContent[id];
+    const moved = MOVED_FIELDS[id];
+    if (!own && moved && storedContent[moved.from]) {
+      const old = storedContent[moved.from]!;
+      own = Object.fromEntries(moved.keys.filter((k) => k in old).map((k) => [k, old[k]]));
+    }
+    content[id] = { ...PERSONAL_DEFAULTS[id], ...(own ?? {}) };
   }
   return { sections, content: content as unknown as PersonalContent };
 }
@@ -617,8 +647,13 @@ export const PERSONAL_FIELDS: Record<PersonalSectionId, Field[]> = {
     { key: "secondaryLabel", label: "Second button label", kind: "text", hint: "Leave empty to hide the button." },
     { key: "secondaryUrl", label: "Second button link", kind: "url" },
   ],
-  pillars: [
+  pillarsHeading: [
     { key: "eyebrow", label: "Eyebrow", kind: "text" },
+    { key: "titleLead", label: "Title start", kind: "text" },
+    coloredWords("titleWords", "Coloured title words"),
+    { key: "titleTail", label: "Title end (grey)", kind: "text" },
+  ],
+  pillars: [
     {
       key: "source",
       label: "Show",
@@ -627,9 +662,6 @@ export const PERSONAL_FIELDS: Record<PersonalSectionId, Field[]> = {
       hint: "products: one card per enabled product from plantagoai.com Products, in rotation. cards: the cards below.",
     },
     { key: "rotateSeconds", label: "Seconds per product", kind: "text", hint: "How long each product shows before the next one." },
-    { key: "titleLead", label: "Title start", kind: "text" },
-    coloredWords("titleWords", "Coloured title words"),
-    { key: "titleTail", label: "Title end (grey)", kind: "text" },
     {
       key: "cards",
       label: "Cards",

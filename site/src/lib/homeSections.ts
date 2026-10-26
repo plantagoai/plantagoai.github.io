@@ -143,6 +143,14 @@ export interface HeadingContent {
   title: string;
 }
 
+export const PRODUCT_LAYOUTS = ["carousel", "list"] as const;
+export type ProductLayout = (typeof PRODUCT_LAYOUTS)[number];
+
+export interface ProductsContent extends HeadingContent {
+  layout: ProductLayout;
+  rotateSeconds: string;
+}
+
 export interface PlatformContent {
   navLabel: string;
   eyebrow: string;
@@ -200,7 +208,7 @@ export interface SectionContent {
   dreamless: DreamlessContent;
   statement: StatementContent;
   about: AboutContent;
-  products: HeadingContent;
+  products: ProductsContent;
   releases: HeadingContent;
   platform: PlatformContent;
   photo: PhotoContent;
@@ -290,7 +298,13 @@ export const DEFAULT_CONTENT: SectionContent = {
       },
     ],
   },
-  products: { navLabel: "Products", eyebrow: "Portfolio", title: "Current Products" },
+  products: {
+    navLabel: "Products",
+    eyebrow: "Portfolio",
+    title: "Current Products",
+    layout: "carousel",
+    rotateSeconds: "7",
+  },
   releases: { navLabel: "Releases", eyebrow: "Releases", title: "Latest Releases" },
   platform: {
     navLabel: "Platform",
@@ -605,7 +619,19 @@ export const SECTION_FIELDS: Record<SectionId, FieldDef[]> = {
     { key: "paragraphs", label: "Text", kind: "paragraphs", hint: "Separate paragraphs with a blank line." },
     cardFields("Card"),
   ],
-  products: [navField, eyebrowField, { key: "title", label: "Title", kind: "text" }],
+  products: [
+    navField,
+    eyebrowField,
+    { key: "title", label: "Title", kind: "text" },
+    {
+      key: "layout",
+      label: "Show",
+      kind: "select",
+      options: PRODUCT_LAYOUTS,
+      hint: "carousel: one product at a time, rotating, with dots and arrows. list: every product card, one under another.",
+    },
+    { key: "rotateSeconds", label: "Seconds per product", kind: "text", hint: "How long each product shows before the next one." },
+  ],
   releases: [navField, eyebrowField, { key: "title", label: "Title", kind: "text" }],
   platform: [
     navField,
