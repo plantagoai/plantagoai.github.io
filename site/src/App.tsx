@@ -11,12 +11,9 @@ import {
   Loader2,
   CheckCheck,
   AlertCircle,
-  AudioLines,
-  Wallet,
-  ShoppingCart,
   Sparkles,
 } from "lucide-react";
-import { useState, useEffect, type FormEvent } from "react";
+import { Fragment, useState, useEffect, type FormEvent } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import {
@@ -26,83 +23,46 @@ import {
   STATUS_BADGE_CLASSES,
   type Project,
 } from "./lib/projects";
-import { useSiteSettings } from "./lib/siteSettings";
+import {
+  useHomepage,
+  SECTION_ANCHORS,
+  TONE_TEXT,
+  CARD_COLORS,
+  WORD_ICONS,
+  type SectionId,
+  type HeroContent,
+  type DreamlessContent,
+  type AboutContent,
+  type HeadingContent,
+  type PlatformContent,
+  type FounderContent,
+  type NewsletterContent,
+  type SharedPackage,
+} from "./lib/homeSections";
 import { outboundSlug, track, trackSections } from "./lib/track";
 
-function useNavLinks(): { label: string; href: string }[] {
-  const { settings } = useSiteSettings();
-  return [
-    { label: "About", href: "#about" },
-    { label: "Products", href: "#products" },
-    ...(settings.releasesEnabled ? [{ label: "Releases", href: "#releases" }] : []),
-    { label: "Platform", href: "#platform" },
-    { label: "Founder", href: "#founder" },
-    { label: "Contact", href: "#contact" },
-  ];
+type NavLink = { label: string; href: string };
+
+/* Turns `code` spans in admin-edited copy into <code> elements. */
+function InlineCode({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(`[^`]+`)/g).map((part, i) =>
+        part.startsWith("`") && part.endsWith("`") && part.length > 1 ? (
+          <code key={i} className="font-mono text-foreground/80">
+            {part.slice(1, -1)}
+          </code>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
 }
 
-type SharedPackage = { name: string; purpose: string; highlight?: string };
-
-const sharedPackages: SharedPackage[] = [
-  {
-    name: "firebase-core",
-    purpose: "Firebase init, Firestore CRUD helpers, tenant-scoped queries, admin SDK.",
-  },
-  {
-    name: "auth",
-    purpose: "Ring-based permissions (0–4), OAuth flows, multi-tenant middleware.",
-  },
-  {
-    name: "payments",
-    purpose: "Braintree gateway, Apple/Google Pay, subscription lifecycle.",
-  },
-  {
-    name: "ai",
-    purpose: "Claude with prompt caching + Gemini vision, usage tracking.",
-    highlight: "Prompt caching as a shared primitive across products.",
-  },
-  {
-    name: "messaging",
-    purpose: "Email (Resend), push (FCM), in-app notifications.",
-  },
-  {
-    name: "db",
-    purpose: "Zod schema validation, referential integrity, auto-fix.",
-    highlight: "Zod schemas compile to Firestore security rules.",
-  },
-  {
-    name: "i18n",
-    purpose: "i18next UI + Gemini AI content translation, lazy cached.",
-  },
-  {
-    name: "legal",
-    purpose: "Privacy / ToS generation, acceptance tracking.",
-    highlight: "Drop-in <TosGate> React component for compliance.",
-  },
-  {
-    name: "flows",
-    purpose: "XState v5 state-machine factory, Firestore persistence.",
-    highlight: "State machines as durable, resumable Firestore documents.",
-  },
-  {
-    name: "seeders",
-    purpose: "Data seeding from JSON/CSV/API with Zod validation.",
-  },
-  {
-    name: "testing",
-    purpose: "Vitest helpers, Firebase emulator mgmt, mock factories.",
-  },
-  {
-    name: "e2e",
-    purpose: "Playwright helpers, flow-driven test generation.",
-  },
-];
-
-
-function Nav() {
+function Nav({ navLinks }: { navLinks: NavLink[] }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const navLinks = useNavLinks();
 
   // At rest the bar is transparent so the mesh band reads as one surface
   // (as on foundation-global.com); it only picks up a canvas + hairline
@@ -177,206 +137,195 @@ function Nav() {
    white stat cards (ZK / 1:1 / 0.4s); these are the PlantagoAI equivalents,
    carrying the copy that used to sit in the mono one-liner underneath.
 
-   Only "1 shared platform" is a constant — it is the claim itself, not a
-   count. The other two are derived from the same data the rest of the page
-   renders, so a package added to the Platform section or a product toggled
-   in /admin can't leave a stale number in the hero. */
-function useHeroStats(projects: Project[], loading: boolean) {
+   The copy is edited in Admin → Homepage sections. A {packages} or
+   {products} in a stat's number is counted from the same data the rest of
+   the page renders, so a package added to the Platform section or a product
+   toggled in /admin can't leave a stale number in the hero. */
+function heroStatValue(value: string, counts: { packages: number; products: number | null }) {
   // useProjects() starts at [] before the Firestore snapshot lands; counting
   // that would flash a confident "0". Show a placeholder until it resolves.
-  const visibleProducts = projects.filter((p) => p.enabled).length;
-  const pending = loading ? "—" : null;
-
-  return [
-    {
-      value: "1",
-      label: "Shared platform",
-      note: "Built once, reused everywhere",
-      tone: "text-emerald-700",
-    },
-    {
-      value: String(sharedPackages.length),
-      label: "TypeScript packages",
-      note: "Auth, payments, AI, compliance",
-      tone: "text-teal-700",
-    },
-    {
-      value: pending ?? String(visibleProducts),
-      label: visibleProducts === 1 && !pending ? "Product in parallel" : "Products in parallel",
-      note: "No corners cut on the basics",
-      tone: "text-cyan-700",
-    },
-  ];
+  return value
+    .replace(/\{packages\}/g, String(counts.packages))
+    .replace(/\{products\}/g, counts.products === null ? "—" : String(counts.products));
 }
 
-function Hero({ projects, loading }: { projects: Project[]; loading: boolean }) {
-  const heroStats = useHeroStats(projects, loading);
+function Hero({
+  content,
+  projects,
+  loading,
+  packageCount,
+}: {
+  content: HeroContent;
+  projects: Project[];
+  loading: boolean;
+  packageCount: number;
+}) {
+  const counts = {
+    packages: packageCount,
+    products: loading ? null : projects.filter((p) => p.enabled).length,
+  };
 
   return (
     <section className="pt-10 pb-14 md:pt-16 md:pb-20">
-      <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 backdrop-blur px-3.5 py-1.5 text-sm font-medium text-foreground/80">
-        <Sparkles className="w-4 h-4 text-primary" />
-        Shared AI and identity infrastructure
-      </p>
+      {content.badge && (
+        <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 backdrop-blur px-3.5 py-1.5 text-sm font-medium text-foreground/80">
+          <Sparkles className="w-4 h-4 text-primary" />
+          {content.badge}
+        </p>
+      )}
 
       <h1 className="mt-6 text-5xl md:text-7xl font-semibold leading-[1.05]">
-        <span className="block text-foreground">Your</span>
-        <span className="flex items-center gap-3 text-indigo-600">
-          <AudioLines className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
-          Voice.
-        </span>
-        <span className="flex items-center gap-3 text-teal-700">
-          <Wallet className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
-          Share.
-        </span>
-        <span className="flex items-center gap-3 text-cyan-700">
-          <ShoppingCart className="w-9 h-9 md:w-12 md:h-12 shrink-0" />
-          Market.
-        </span>
+        {content.lead && <span className="block text-foreground">{content.lead}</span>}
+        {content.words.map((word, i) => {
+          const Icon = WORD_ICONS[word.icon];
+          return (
+            <span key={i} className={`flex items-center gap-3 ${TONE_TEXT[word.tone] ?? "text-foreground"}`}>
+              {Icon && <Icon className="w-9 h-9 md:w-12 md:h-12 shrink-0" />}
+              {word.text}
+            </span>
+          );
+        })}
       </h1>
 
-      <p className="mt-7 text-lg text-muted-foreground max-w-2xl leading-relaxed">
-        The core shared AI and identity infrastructure for verified-human ecosystems —
-        twelve TypeScript packages handling auth, payments, AI with prompt caching,
-        i18n, compliance, and testing.
-      </p>
+      {content.description && (
+        <p className="mt-7 text-lg text-muted-foreground max-w-2xl leading-relaxed">
+          {content.description}
+        </p>
+      )}
 
-      <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl">
-        {heroStats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-lg border border-border bg-card px-4 py-3.5 shadow-elevation-1"
-          >
-            <p className={`text-2xl font-semibold ${stat.tone}`}>{stat.value}</p>
-            <p className="text-sm font-medium text-foreground mt-0.5">{stat.label}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{stat.note}</p>
-          </div>
-        ))}
-      </div>
+      {content.stats.length > 0 && (
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl">
+          {content.stats.map((stat, i) => (
+            <div
+              key={i}
+              className="rounded-lg border border-border bg-card px-4 py-3.5 shadow-elevation-1"
+            >
+              <p className={`text-2xl font-semibold ${TONE_TEXT[stat.tone] ?? "text-foreground"}`}>
+                {heroStatValue(stat.value, counts)}
+              </p>
+              <p className="text-sm font-medium text-foreground mt-0.5">{stat.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{stat.note}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
-      <div className="flex flex-wrap items-center gap-3 pt-8">
-        <a
-          href="#products"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-base font-medium hover:opacity-90 transition-opacity"
-        >
-          View Products
-          <ArrowRight className="w-4 h-4" />
-        </a>
-        <a
-          href="#contact"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-card text-base font-medium hover:bg-muted transition-colors"
-        >
-          Get in Touch
-        </a>
-      </div>
+      {(content.primaryLabel || content.secondaryLabel) && (
+        <div className="flex flex-wrap items-center gap-3 pt-8">
+          {content.primaryLabel && (
+            <a
+              href={content.primaryHref}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-base font-medium hover:opacity-90 transition-opacity"
+            >
+              {content.primaryLabel}
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          )}
+          {content.secondaryLabel && (
+            <a
+              href={content.secondaryHref}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-card text-base font-medium hover:bg-muted transition-colors"
+            >
+              {content.secondaryLabel}
+            </a>
+          )}
+        </div>
+      )}
     </section>
   );
 }
 
-const DREAMLESS_URL = "https://dreamless.micromedia-ai.com";
-
 /* Series banner for Dreamless: The Hush, made with YourContentCreator. Kept
    in the poster's own night palette rather than the site tokens, so it reads
-   as the show's key art. Toggled in Admin → Site settings. */
-function DreamlessBanner() {
+   as the show's key art. */
+function DreamlessBanner({ content }: { content: DreamlessContent }) {
   return (
-    <section aria-label="Dreamless: The Hush" className="scroll-mt-20">
+    <section aria-label={content.title} className="scroll-mt-20">
       <a
-        href={DREAMLESS_URL}
+        href={content.url}
         data-track="dreamless"
         target="_blank"
         rel="noopener noreferrer"
         className="group grid grid-cols-1 sm:grid-cols-[minmax(0,15rem)_1fr] overflow-hidden rounded-xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-slate-100 shadow-elevation-1"
       >
         <img
-          src="/dreamless-poster.webp"
-          alt="Dreamless: The Hush poster — Kai and his robot Tofu on a balcony above a sleeping city at night"
+          src={content.image}
+          alt={content.imageAlt}
           width={600}
           height={840}
           loading="lazy"
           className="w-full h-full max-h-96 sm:max-h-none object-cover object-top"
         />
         <div className="flex flex-col justify-center gap-4 p-6 md:p-8">
-          <p className="text-xs font-medium uppercase tracking-[0.3em] text-teal-300">
-            New series · Now airing
-          </p>
+          {content.eyebrow && (
+            <p className="text-xs font-medium uppercase tracking-[0.3em] text-teal-300">
+              {content.eyebrow}
+            </p>
+          )}
           <div>
             <h2 className="text-3xl md:text-4xl font-semibold tracking-wide text-white">
-              Dreamless: The Hush
+              {content.title}
             </h2>
-            <p className="mt-2 text-lg italic text-slate-300">One in a million can't dream.</p>
+            {content.tagline && (
+              <p className="mt-2 text-lg italic text-slate-300">{content.tagline}</p>
+            )}
           </div>
-          <p className="text-base text-slate-300 leading-relaxed max-w-xl">
-            When the world falls into the Hush, a sleep nobody wakes from, Kai and his robot
-            Tofu keep watch over a city gone quiet. A 28-episode AI-animated anime series,
-            about a minute an episode, made with YourContentCreator — every episode written,
-            drawn, voiced and scored by AI agents and reviewed by a person.
-          </p>
-          <span className="inline-flex w-fit items-center gap-2 rounded-lg bg-teal-400 px-4 py-2.5 text-base font-medium text-slate-950 transition-opacity group-hover:opacity-90">
-            Watch the series
-            <ArrowRight className="w-4 h-4" />
-          </span>
+          {content.body && (
+            <p className="text-base text-slate-300 leading-relaxed max-w-xl">{content.body}</p>
+          )}
+          {content.buttonLabel && (
+            <span className="inline-flex w-fit items-center gap-2 rounded-lg bg-teal-400 px-4 py-2.5 text-base font-medium text-slate-950 transition-opacity group-hover:opacity-90">
+              {content.buttonLabel}
+              <ArrowRight className="w-4 h-4" />
+            </span>
+          )}
         </div>
       </a>
     </section>
   );
 }
 
-function About() {
+function InfoCards({ cards, columns }: { cards: AboutContent["cards"]; columns: string }) {
+  if (cards.length === 0) return null;
+  return (
+    <div className={`grid ${columns} gap-3`}>
+      {cards.map((card, i) => {
+        const color = CARD_COLORS[card.color] ?? CARD_COLORS.indigo;
+        return (
+          <div key={i} className={`p-4 rounded-md border ${color.box}`}>
+            <p className={`text-sm font-semibold mb-1 ${color.title}`}>{card.title}</p>
+            <p className="text-sm text-muted-foreground">{card.body}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* The card grid keeps the page's original widths: four across for About,
+   three for Founder. Static strings so Tailwind ships them. */
+function cardColumns(count: number): string {
+  if (count >= 4) return "md:grid-cols-4";
+  if (count === 3) return "md:grid-cols-3";
+  if (count === 2) return "md:grid-cols-2";
+  return "";
+}
+
+function About({ content }: { content: AboutContent }) {
   return (
     <section id="about" className="scroll-mt-20">
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="bg-muted/70 p-5 border-b border-border">
-          <p className="eyebrow mb-2">
-            About
-          </p>
-          <h2 className="font-semibold text-lg text-foreground">
-            The shared AI and identity layer for verified-human ecosystems
-          </h2>
+          <p className="eyebrow mb-2">{content.eyebrow}</p>
+          <h2 className="font-semibold text-lg text-foreground">{content.title}</h2>
         </div>
         <div className="p-6 space-y-5">
-          <p className="text-base text-muted-foreground leading-relaxed">
-            PlantagoAI is the core shared AI and identity infrastructure that powers
-            verified-human ecosystems and decentralized applications. A comprehensive
-            shared-package architecture — authentication, payments, messaging, AI with
-            prompt caching, multi-tenant flows — built once and reused across every product
-            that needs it.
-          </p>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Built to bridge Web2 cloud infrastructure with Web3 protocols. Powers Foundation
-            (verified-human governance on Solana) and adjacent products that need the same
-            identity, AI, and compliance primitives.
-          </p>
-          <div className="grid md:grid-cols-4 gap-3">
-            <div className="p-4 rounded-md bg-indigo-50 border border-indigo-200">
-              <p className="text-sm font-semibold text-indigo-700 mb-1">Verified-Human Identity</p>
-              <p className="text-sm text-muted-foreground">
-                ZK identity primitives via Self Protocol passport verification.
-                Sybil-resistant attestation reused across downstream products.
-              </p>
-            </div>
-            <div className="p-4 rounded-md bg-emerald-50 border border-emerald-200">
-              <p className="text-sm font-semibold text-emerald-700 mb-1">AI Layer</p>
-              <p className="text-sm text-muted-foreground">
-                Anthropic Claude with prompt caching as shared infrastructure.
-                Cost-efficient LLM workloads, usage tracking, multi-tenant.
-              </p>
-            </div>
-            <div className="p-4 rounded-md bg-cyan-50 border border-cyan-200">
-              <p className="text-sm font-semibold text-cyan-700 mb-1">Governance & Distribution</p>
-              <p className="text-sm text-muted-foreground">
-                On-chain governance and verified-human payouts on Solana via
-                Anchor and Rust. Auditable, sybil-resistant, anonymous voting.
-              </p>
-            </div>
-            <div className="p-4 rounded-md bg-amber-50 border border-amber-200">
-              <p className="text-sm font-semibold text-amber-700 mb-1">Web2 ↔ Web3 Bridge</p>
-              <p className="text-sm text-muted-foreground">
-                Scalable backend services bridging Cloud Functions and Firestore
-                with Solana on-chain programs. Reusable across products.
-              </p>
-            </div>
-          </div>
+          {content.paragraphs.map((para, i) => (
+            <p key={i} className="text-base text-muted-foreground leading-relaxed">
+              {para}
+            </p>
+          ))}
+          <InfoCards cards={content.cards} columns={cardColumns(content.cards.length)} />
         </div>
       </div>
     </section>
@@ -521,18 +470,20 @@ function ProjectCard({ project }: { project: Project }) {
   );
 }
 
-function Projects({ projects }: { projects: Project[] }) {
+function SectionHeading({ content }: { content: HeadingContent }) {
+  return (
+    <div className="text-center">
+      {content.eyebrow && <p className="eyebrow mb-2">{content.eyebrow}</p>}
+      <h2 className="text-3xl md:text-4xl font-semibold text-foreground">{content.title}</h2>
+    </div>
+  );
+}
+
+function Projects({ content, projects }: { content: HeadingContent; projects: Project[] }) {
   const visible = projects.filter((p) => p.enabled);
   return (
     <section id="products" className="space-y-6 scroll-mt-20">
-      <div className="text-center">
-        <p className="eyebrow mb-2">
-          Portfolio
-        </p>
-        <h2 className="text-3xl md:text-4xl font-semibold text-foreground">
-          Current Products
-        </h2>
-      </div>
+      <SectionHeading content={content} />
 
       <div className="space-y-6">
         {visible.map((project) => (
@@ -554,20 +505,13 @@ function formatReleaseDate(iso: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function Releases({ projects }: { projects: Project[] }) {
+function Releases({ content, projects }: { content: HeadingContent; projects: Project[] }) {
   const shipped = projects.filter((p) => p.enabled && p.version);
   if (shipped.length === 0) return null;
 
   return (
     <section id="releases" className="scroll-mt-20 space-y-6">
-      <div className="text-center">
-        <p className="eyebrow mb-2">
-          Releases
-        </p>
-        <h2 className="text-3xl md:text-4xl font-semibold text-foreground">
-          Latest Releases
-        </h2>
-      </div>
+      <SectionHeading content={content} />
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="divide-y divide-border">
@@ -622,33 +566,26 @@ function Releases({ projects }: { projects: Project[] }) {
   );
 }
 
-function Platform({ projects }: { projects: Project[] }) {
+function Platform({ content, projects }: { content: PlatformContent; projects: Project[] }) {
   const projectsWithPackages = projects.filter((p) => p.enabled && p.packages.length > 0);
+  const sharedPackages: SharedPackage[] = content.packages;
 
   return (
     <section id="platform" className="scroll-mt-20 space-y-6">
       <div className="text-center">
-        <p className="eyebrow mb-2">
-          Platform
-        </p>
-        <h2 className="text-3xl md:text-4xl font-semibold text-foreground">
-          @plantagoai — Shared Infrastructure
-        </h2>
-        <p className="text-base text-muted-foreground max-w-2xl mx-auto mt-3 leading-relaxed">
-          Twelve TypeScript packages, consumed by every product via workspace links.
-          Build once, reuse everywhere — five products shipping in parallel without
-          cutting corners on auth, compliance, or testing.
-        </p>
+        {content.eyebrow && <p className="eyebrow mb-2">{content.eyebrow}</p>}
+        <h2 className="text-3xl md:text-4xl font-semibold text-foreground">{content.title}</h2>
+        {content.intro && (
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto mt-3 leading-relaxed">
+            {content.intro}
+          </p>
+        )}
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="bg-muted/70 p-5 border-b border-border">
-          <p className="eyebrow mb-2">
-            Packages
-          </p>
-          <h3 className="font-semibold text-lg text-foreground">
-            12 libraries, shared via workspace links
-          </h3>
+          <p className="eyebrow mb-2">{content.packagesEyebrow}</p>
+          <h3 className="font-semibold text-lg text-foreground">{content.packagesTitle}</h3>
         </div>
         <div className="p-6 grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           {sharedPackages.map((pkg) => (
@@ -685,12 +622,8 @@ function Platform({ projects }: { projects: Project[] }) {
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="bg-muted/70 p-5 border-b border-border">
-          <p className="eyebrow mb-2">
-            Reuse
-          </p>
-          <h3 className="font-semibold text-lg text-foreground">
-            Which packages power which products
-          </h3>
+          <p className="eyebrow mb-2">{content.reuseEyebrow}</p>
+          <h3 className="font-semibold text-lg text-foreground">{content.reuseTitle}</h3>
         </div>
         <div className="p-6 overflow-x-auto">
           <table className="w-full text-sm min-w-[32rem]">
@@ -738,79 +671,44 @@ function Platform({ projects }: { projects: Project[] }) {
             </tbody>
           </table>
 
-          <p className="mt-5 pt-4 border-t border-border text-xs text-muted-foreground leading-relaxed">
-            <code className="font-mono text-foreground/80">@plantagoai/testing</code>{" "}
-            powers the tests of every package above — 11 internal consumers, intentionally hidden from the product graph.
-          </p>
+          {content.reuseFootnote && (
+            <p className="mt-5 pt-4 border-t border-border text-xs text-muted-foreground leading-relaxed">
+              <InlineCode text={content.reuseFootnote} />
+            </p>
+          )}
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-xl p-5 shadow-elevation-1">
-        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-          <div className="flex items-center gap-2">
-            <Github className="w-5 h-5 text-emerald-600 shrink-0" />
-            <h3 className="font-semibold text-base text-foreground">
-              Currently a private monorepo
-            </h3>
+      {(content.repoTitle || content.repoBody) && (
+        <div className="bg-card border border-border rounded-xl p-5 shadow-elevation-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+            <div className="flex items-center gap-2">
+              <Github className="w-5 h-5 text-emerald-600 shrink-0" />
+              <h3 className="font-semibold text-base text-foreground">{content.repoTitle}</h3>
+            </div>
+            <p className="text-sm text-muted-foreground md:flex-1">
+              <InlineCode text={content.repoBody} />
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground md:flex-1">
-            Select packages (<code className="font-mono text-foreground/80">flows</code>,{" "}
-            <code className="font-mono text-foreground/80">legal</code>,{" "}
-            <code className="font-mono text-foreground/80">seeders</code>) are strong
-            candidates for open-source release. Get in touch if interested.
-          </p>
         </div>
-      </div>
+      )}
     </section>
   );
 }
 
-function Founder() {
+function Founder({ content }: { content: FounderContent }) {
   return (
     <section id="founder" className="scroll-mt-20">
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="bg-muted/70 p-5 border-b border-border">
-          <p className="eyebrow mb-2">
-            Founder
-          </p>
-          <h2 className="font-semibold text-lg text-foreground">Dagan Gilat</h2>
+          <p className="eyebrow mb-2">{content.eyebrow}</p>
+          <h2 className="font-semibold text-lg text-foreground">{content.name}</h2>
         </div>
         <div className="p-6 space-y-5">
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Hands-on founder, architect, and researcher with 25+ years building production
-            systems at the intersection of distributed systems, cloud infrastructure, and
-            applied AI. Track record of taking research from whiteboard to shipped product —
-            IBM cloud platforms generating $100M+ in revenue, ML-driven cloud-AI products at
-            Toga Networks, and a current verified-human governance stack on Solana. Deep
-            expertise in Rust and Go; comfortable from kernel-adjacent code up to founder-level
-            product strategy.
-          </p>
-          <div className="grid md:grid-cols-3 gap-3">
-            <div className="p-4 rounded-md bg-indigo-50 border border-indigo-200">
-              <p className="text-sm font-semibold text-indigo-700 mb-1">Distributed Systems & Cloud</p>
-              <p className="text-sm text-muted-foreground">
-                Senior Manager, Cloud Platforms at IBM Research (OpenStack, virtualization,
-                storage, networking). CTO Machine Learning at Toga Networks. Microservices,
-                gRPC, Kubernetes — Rust and Go.
-              </p>
-            </div>
-            <div className="p-4 rounded-md bg-indigo-50 border border-indigo-200">
-              <p className="text-sm font-semibold text-indigo-700 mb-1">Blockchain & Solana</p>
-              <p className="text-sm text-muted-foreground">
-                Verified-human governance and identity on Solana. On-chain programs in
-                Anchor / Rust; off-chain in Cloud Functions and Firestore. Earlier: PKI and
-                core network functions at HyperMesh.
-              </p>
-            </div>
-            <div className="p-4 rounded-md bg-emerald-50 border border-emerald-200">
-              <p className="text-sm font-semibold text-emerald-700 mb-1">Applied AI & ML</p>
-              <p className="text-sm text-muted-foreground">
-                Anthropic Claude with prompt caching as shared infrastructure across products.
-                Earlier: reinforcement-learning and deep-learning auto-scaling productized at
-                Toga Networks (PyTorch, TensorFlow, Keras, Spark).
-              </p>
-            </div>
-          </div>
+          {content.bio && (
+            <p className="text-base text-muted-foreground leading-relaxed">{content.bio}</p>
+          )}
+          <InfoCards cards={content.cards} columns={cardColumns(content.cards.length)} />
         </div>
       </div>
     </section>
@@ -823,7 +721,7 @@ const OTHER_OPTION = {
   color: "text-muted-foreground border-border bg-muted/50",
 };
 
-function ContactForm({ projects }: { projects: Project[] }) {
+function ContactForm({ content, projects }: { content: HeadingContent; projects: Project[] }) {
   const projectOptions = [
     ...projects
       .filter((p) => p.enabled)
@@ -879,10 +777,8 @@ function ContactForm({ projects }: { projects: Project[] }) {
     <section id="contact" className="scroll-mt-20">
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="bg-muted/70 p-5 border-b border-border">
-          <p className="eyebrow mb-2">
-            Contact
-          </p>
-          <h2 className="font-semibold text-lg text-foreground">Get in Touch</h2>
+          <p className="eyebrow mb-2">{content.eyebrow}</p>
+          <h2 className="font-semibold text-lg text-foreground">{content.title}</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -979,7 +875,7 @@ function ContactForm({ projects }: { projects: Project[] }) {
   );
 }
 
-function Newsletter() {
+function Newsletter({ content }: { content: NewsletterContent }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "subscribed" | "error">("idle");
 
@@ -1010,11 +906,9 @@ function Newsletter() {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <Mail className="w-5 h-5 text-emerald-600" />
-              <h3 className="font-semibold text-base text-foreground">Stay Updated</h3>
+              <h3 className="font-semibold text-base text-foreground">{content.title}</h3>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Subscribe to the PlantagoAI newsletter for project updates, launches, and insights.
-            </p>
+            <p className="text-sm text-muted-foreground">{content.body}</p>
           </div>
 
           <form onSubmit={handleSubscribe} className="flex items-center gap-2 min-w-0 md:w-auto w-full">
@@ -1084,17 +978,33 @@ function Footer() {
 
 export function App() {
   const { projects, loading } = useProjects();
-  const { settings } = useSiteSettings();
+  const { homepage, loading: homepageLoading } = useHomepage();
+  const { sections, content } = homepage;
+  const visible = sections.filter((s) => s.visible);
+
+  // The menu follows the page: visible sections in page order, under the
+  // label set in Admin. Releases only renders when a product has a version.
+  const releasesShown = projects.some((p) => p.enabled && p.version);
+  const navLinks: NavLink[] = visible.flatMap(({ id }) => {
+    const anchor = SECTION_ANCHORS[id];
+    const label = (content[id] as { navLabel?: string }).navLabel?.trim();
+    if (!anchor || !label || (id === "releases" && !releasesShown)) return [];
+    return [{ label, href: `#${anchor}` }];
+  });
+  const sectionKey = visible.map((s) => s.id).join(",");
 
   useEffect(() => {
     track("page");
   }, []);
 
-  // Sections reached, once per session each. Re-run as optional sections
-  // (Releases) appear once settings load.
+  // Sections reached, once per session each. Re-run as sections appear,
+  // move or hide once the homepage settings load.
   useEffect(
-    () => trackSections(["about", "products", "releases", "platform", "founder", "contact"]),
-    [settings.releasesEnabled, loading],
+    () =>
+      trackSections(
+        visible.map((s) => SECTION_ANCHORS[s.id]).filter((a): a is string => a !== null),
+      ),
+    [sectionKey, loading, homepageLoading],
   );
 
   // Clicks on links that leave the site (project demos, docs, source,
@@ -1110,6 +1020,36 @@ export function App() {
     return () => document.removeEventListener("click", onClick);
   }, []);
 
+  const renderSection = (id: SectionId) => {
+    switch (id) {
+      case "hero":
+        return (
+          <Hero
+            content={content.hero}
+            projects={projects}
+            loading={loading}
+            packageCount={content.platform.packages.length}
+          />
+        );
+      case "dreamless":
+        return <DreamlessBanner content={content.dreamless} />;
+      case "about":
+        return <About content={content.about} />;
+      case "products":
+        return <Projects content={content.products} projects={projects} />;
+      case "releases":
+        return <Releases content={content.releases} projects={projects} />;
+      case "platform":
+        return <Platform content={content.platform} projects={projects} />;
+      case "founder":
+        return <Founder content={content.founder} />;
+      case "contact":
+        return <ContactForm content={content.contact} projects={projects} />;
+      case "newsletter":
+        return <Newsletter content={content.newsletter} />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background mesh-hero">
       {/* Foundation's signature hero band: a clipped pastel field with four
@@ -1121,17 +1061,12 @@ export function App() {
         <div className="mesh-blob mesh-blob-3" />
         <div className="mesh-blob mesh-blob-4" />
       </div>
-      <Nav />
+      <Nav navLinks={navLinks} />
       <main className="p-6 lg:p-8 max-w-5xl mx-auto space-y-10 animate-fade-in">
-        <Hero projects={projects} loading={loading} />
-        {settings.dreamlessBannerEnabled && <DreamlessBanner />}
-        <About />
-        <Projects projects={projects} />
-        {settings.releasesEnabled && <Releases projects={projects} />}
-        <Platform projects={projects} />
-        <Founder />
-        <ContactForm projects={projects} />
-        <Newsletter />
+        {/* Wait for the saved layout, so a section hidden or edited in Admin
+            never flashes its default copy first. */}
+        {!homepageLoading &&
+          visible.map((s) => <Fragment key={s.id}>{renderSection(s.id)}</Fragment>)}
       </main>
       <Footer />
     </div>
