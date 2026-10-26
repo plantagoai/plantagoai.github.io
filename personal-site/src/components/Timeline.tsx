@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import { timeline } from "../data/cv";
+import type { PersonalContent } from "../data/homeContent";
 
 const TAG_COLOR: Record<string, string> = {
   current: "hsl(var(--pillar-voice))",
@@ -10,21 +10,24 @@ const TAG_COLOR: Record<string, string> = {
   industry: "hsl(var(--muted))",
 };
 
-export default function Timeline() {
+export default function Timeline({ content }: { content: PersonalContent["timeline"] }) {
   const [open, setOpen] = useState(0);
+  const timeline = content.entries;
   return (
     <section id="timeline" className="border-t border-border py-20">
       <div className="container-wide">
-        <p className="text-meta uppercase tracking-[0.18em]">Career</p>
-        <h2 className="heading-section mt-2">25 years. Six chapters.</h2>
+        <p className="text-meta uppercase tracking-[0.18em]">{content.eyebrow}</p>
+        <h2 className="heading-section mt-2">{content.title}</h2>
         <div className="mt-10 grid gap-x-10 md:grid-cols-[200px_1fr]">
           <div className="hidden md:block">
-            <div className="sticky top-24 text-xs text-muted">
-              <p className="font-mono">{timeline[0].period.split(" – ")[0]} →</p>
-              <p className="font-mono mt-1 opacity-60">
-                {timeline[timeline.length - 1].period.split(" – ")[0]}
-              </p>
-            </div>
+            {timeline.length > 0 && (
+              <div className="sticky top-24 text-xs text-muted">
+                <p className="font-mono">{timeline[0].period.split(" – ")[0]} →</p>
+                <p className="font-mono mt-1 opacity-60">
+                  {timeline[timeline.length - 1].period.split(" – ")[0]}
+                </p>
+              </div>
+            )}
           </div>
           <div className="relative border-l border-border pl-6">
             {timeline.map((entry, i) => {
@@ -33,7 +36,7 @@ export default function Timeline() {
                 <div key={i} className="relative pb-6">
                   <span
                     className="absolute -left-[31px] top-2 inline-block h-2.5 w-2.5 rounded-full ring-4 ring-bg"
-                    style={{ background: TAG_COLOR[entry.tag ?? "industry"] }}
+                    style={{ background: TAG_COLOR[entry.tag] ?? TAG_COLOR.industry }}
                   />
                   <button
                     onClick={() => setOpen(isOpen ? -1 : i)}

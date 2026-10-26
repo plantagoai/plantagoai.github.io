@@ -467,7 +467,7 @@ export async function saveSectionContent<K extends SectionId>(
 
 export type FieldDef =
   | { key: string; label: string; kind: "text" | "textarea" | "url"; hint?: string }
-  | { key: string; label: string; kind: "paragraphs"; hint?: string }
+  | { key: string; label: string; kind: "paragraphs" | "lines"; hint?: string }
   | { key: string; label: string; kind: "select"; options: readonly string[]; hint?: string }
   | { key: string; label: string; kind: "list"; itemLabel: string; fields: FieldDef[]; blank: Record<string, unknown>; hint?: string };
 
