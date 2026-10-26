@@ -991,6 +991,17 @@ function Founder({ content }: { content: FounderContent }) {
           <div>
             <p className="eyebrow mb-2">{content.eyebrow}</p>
             <h2 className="font-semibold text-lg text-foreground">{content.name}</h2>
+            {content.linkLabel && content.linkUrl && (
+              <a
+                href={content.linkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                {content.linkLabel}
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            )}
           </div>
         </div>
         <div className="p-6 space-y-5">
