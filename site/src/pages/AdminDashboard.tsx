@@ -19,10 +19,11 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ProjectsEditor } from "./admin/ProjectsEditor";
-import { HomepageSectionsEditor } from "./admin/HomepageSectionsEditor";
+import { HomepageSectionsEditor, DAGANGILAT_SECTIONS } from "./admin/HomepageSectionsEditor";
 import { ScheduledJobsPanel } from "./admin/ScheduledJobsPanel";
 import { seedDefaultsIfEmpty, useProjects, getIconComponent, COLORS } from "../lib/projects";
 import { seedHomepageIfMissing } from "../lib/homeSections";
+import { seedPersonalHomeIfMissing } from "../lib/personalHome";
 import { logAdminLogin } from "../lib/analytics";
 import { markAdminBrowser } from "../lib/track";
 import { AnalyticsPanel } from "./admin/AnalyticsPanel";
@@ -741,6 +742,7 @@ export default function AdminDashboard() {
     if (isAdmin) {
       seedDefaultsIfEmpty().catch(() => {});
       seedHomepageIfMissing().catch(() => {});
+      seedPersonalHomeIfMissing().catch(() => {});
     }
   }, [isAdmin]);
 
@@ -804,6 +806,7 @@ export default function AdminDashboard() {
 
         {/* Homepage sections: copy, order and visibility */}
         <HomepageSectionsEditor />
+        <HomepageSectionsEditor site={DAGANGILAT_SECTIONS} />
         <ScheduledJobsPanel />
 
         {/* Projects configuration (CMS) */}

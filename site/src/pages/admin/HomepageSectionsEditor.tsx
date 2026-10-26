@@ -22,17 +22,66 @@ import {
   SECTION_LABELS,
   SECTION_NOTES,
   type FieldDef,
-  type SectionEntry,
-  type SectionId,
-  type SectionContent,
 } from "../../lib/homeSections";
+import { usePersonalHome, savePersonalOrder, savePersonalContent } from "../../lib/personalHome";
+import {
+  PERSONAL_DEFAULTS,
+  PERSONAL_FIELDS,
+  PERSONAL_SECTION_LABELS,
+  PERSONAL_SECTION_NOTES,
+} from "../../../../personal-site/src/data/homeContent";
 
 type Draft = Record<string, unknown>;
+type Entry = { id: string; visible: boolean };
 
-export function HomepageSectionsEditor() {
-  const { homepage, loading } = useHomepage();
-  const [expanded, setExpanded] = useState<SectionId | null>(null);
-  const [busy, setBusy] = useState<SectionId | null>(null);
+/** One site's sections: where they load from and save to, and how each
+ *  one is labelled and edited. */
+export interface SectionsSite {
+  title: string;
+  subtitle: string;
+  useData: () => { sections: Entry[]; content: Record<string, unknown>; loading: boolean };
+  saveOrder: (sections: Entry[]) => Promise<void>;
+  saveContent: (id: string, value: Draft) => Promise<void>;
+  defaults: Record<string, unknown>;
+  fields: Record<string, FieldDef[]>;
+  labels: Record<string, string>;
+  notes: Record<string, string | undefined>;
+}
+
+export const PLANTAGOAI_SECTIONS: SectionsSite = {
+  title: "Homepage Sections",
+  subtitle: "plantagoai.com · edit, reorder and show/hide",
+  useData: () => {
+    const { homepage, loading } = useHomepage();
+    return { ...homepage, content: homepage.content as unknown as Record<string, unknown>, loading };
+  },
+  saveOrder: (sections) => saveSectionOrder(sections as Parameters<typeof saveSectionOrder>[0]),
+  saveContent: (id, value) => saveSectionContent(id as never, value as never),
+  defaults: DEFAULT_CONTENT as unknown as Record<string, unknown>,
+  fields: SECTION_FIELDS,
+  labels: SECTION_LABELS,
+  notes: SECTION_NOTES,
+};
+
+export const DAGANGILAT_SECTIONS: SectionsSite = {
+  title: "dagangilat.com Sections",
+  subtitle: "edit, reorder and show/hide · goes live on save",
+  useData: () => {
+    const { home, loading } = usePersonalHome();
+    return { ...home, content: home.content as unknown as Record<string, unknown>, loading };
+  },
+  saveOrder: (sections) => savePersonalOrder(sections as Parameters<typeof savePersonalOrder>[0]),
+  saveContent: (id, value) => savePersonalContent(id as never, value),
+  defaults: PERSONAL_DEFAULTS as unknown as Record<string, unknown>,
+  fields: PERSONAL_FIELDS as unknown as Record<string, FieldDef[]>,
+  labels: PERSONAL_SECTION_LABELS,
+  notes: PERSONAL_SECTION_NOTES,
+};
+
+export function HomepageSectionsEditor({ site = PLANTAGOAI_SECTIONS }: { site?: SectionsSite }) {
+  const { sections, content, loading } = site.useData();
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -42,12 +91,10 @@ export function HomepageSectionsEditor() {
     );
   }
 
-  const { sections, content } = homepage;
-
-  const writeSections = async (next: SectionEntry[], id: SectionId) => {
+  const writeSections = async (next: Entry[], id: string) => {
     setBusy(id);
     try {
-      await saveSectionOrder(next);
+      await site.saveOrder(next);
     } finally {
       setBusy(null);
     }
@@ -70,8 +117,8 @@ export function HomepageSectionsEditor() {
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center gap-2">
         <LayoutList className="w-4 h-4 text-emerald-700" />
-        <h2 className="font-semibold text-sm">Homepage Sections</h2>
-        <span className="text-xs text-muted-foreground">edit, reorder and show/hide on the public site</span>
+        <h2 className="font-semibold text-sm">{site.title}</h2>
+        <span className="text-xs text-muted-foreground">{site.subtitle}</span>
       </div>
 
       <div className="divide-y divide-border">
@@ -101,7 +148,7 @@ export function HomepageSectionsEditor() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">{SECTION_LABELS[section.id]}</span>
+                    <span className="font-semibold text-sm">{site.labels[section.id] ?? section.id}</span>
                     <span
                       className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
                         section.visible
@@ -113,7 +160,7 @@ export function HomepageSectionsEditor() {
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate mt-0.5">
-                    {summary(section.id, content)}
+                    {summary(content[section.id])}
                   </p>
                 </div>
 
@@ -148,8 +195,9 @@ export function HomepageSectionsEditor() {
               {isOpen && (
                 <div className="border-t border-border bg-muted/20">
                   <SectionForm
+                    site={site}
                     id={section.id}
-                    value={content[section.id] as unknown as Draft}
+                    value={content[section.id] as Draft}
                     onClose={() => setExpanded(null)}
                   />
                 </div>
@@ -162,16 +210,32 @@ export function HomepageSectionsEditor() {
   );
 }
 
-function summary(id: SectionId, content: SectionContent): string {
-  const c = content[id] as unknown as Record<string, unknown>;
-  const text = [c.title, c.name, c.badge, c.lead].find((v) => typeof v === "string" && v);
-  if (id === "hero") {
-    return [content.hero.lead, ...content.hero.words.map((w) => w.text)].join(" ");
+/** A one-line hint of what a section says, for the collapsed row. */
+function summary(value: unknown): string {
+  const c = (value ?? {}) as Record<string, unknown>;
+  if (Array.isArray(c.words) && typeof c.lead === "string") {
+    return [c.lead, ...(c.words as { text?: string }[]).map((w) => w.text ?? "")].join(" ");
   }
+  if (Array.isArray(c.titleWords) && c.titleWords.every((w) => typeof w === "string")) {
+    return (c.titleWords as string[]).join(", ");
+  }
+  const text = [c.title, c.name, c.badge, c.lead, c.titleLead, c.eyebrow, c.copyright, c.body].find(
+    (v) => typeof v === "string" && v,
+  );
   return (text as string | undefined) ?? "";
 }
 
-function SectionForm({ id, value, onClose }: { id: SectionId; value: Draft; onClose: () => void }) {
+function SectionForm({
+  site,
+  id,
+  value,
+  onClose,
+}: {
+  site: SectionsSite;
+  id: string;
+  value: Draft;
+  onClose: () => void;
+}) {
   const [draft, setDraft] = useState<Draft>(value);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -180,7 +244,7 @@ function SectionForm({ id, value, onClose }: { id: SectionId; value: Draft; onCl
     setError(null);
     setSaving(true);
     try {
-      await saveSectionContent(id, draft as unknown as SectionContent[typeof id]);
+      await site.saveContent(id, draft);
       onClose();
     } catch (e: any) {
       setError(e.message || "Save failed");
@@ -190,8 +254,8 @@ function SectionForm({ id, value, onClose }: { id: SectionId; value: Draft; onCl
   };
 
   const handleReset = () => {
-    if (!confirm(`Put back the original ${SECTION_LABELS[id]} copy? Click Save to keep it.`)) return;
-    setDraft(structuredClone(DEFAULT_CONTENT[id]) as unknown as Draft);
+    if (!confirm(`Put back the original ${site.labels[id] ?? id} copy? Click Save to keep it.`)) return;
+    setDraft(structuredClone(site.defaults[id]) as Draft);
   };
 
   return (
@@ -201,9 +265,9 @@ function SectionForm({ id, value, onClose }: { id: SectionId; value: Draft; onCl
           {error}
         </p>
       )}
-      {SECTION_NOTES[id] && <p className="text-xs text-muted-foreground">{SECTION_NOTES[id]}</p>}
+      {site.notes[id] && <p className="text-xs text-muted-foreground">{site.notes[id]}</p>}
 
-      <Fields fields={SECTION_FIELDS[id]} value={draft} onChange={setDraft} />
+      <Fields fields={site.fields[id] ?? []} value={draft} onChange={setDraft} />
 
       <div className="flex items-center justify-between pt-3 border-t border-border">
         <button
@@ -277,11 +341,13 @@ function Fields({
               </Field>
             );
           case "paragraphs":
+          case "lines":
             return (
               <ParagraphsField
                 key={field.key}
                 label={field.label}
                 hint={field.hint}
+                separator={field.kind === "lines" ? "line" : "blank"}
                 value={(current as string[]) ?? []}
                 onChange={(v) => set(field.key, v)}
               />
@@ -317,20 +383,23 @@ function Fields({
   );
 }
 
-/* Paragraphs are edited as one text box with blank lines between them; the
-   raw text is kept while typing so a half-typed blank line isn't eaten. */
+/* A list of strings edited as one text box: paragraphs with blank lines
+   between them, or one item per line. The raw text is kept while typing so
+   a half-typed separator isn't eaten. */
 function ParagraphsField({
   label,
   hint,
+  separator,
   value,
   onChange,
 }: {
   label: string;
   hint?: string;
+  separator: "blank" | "line";
   value: string[];
   onChange: (v: string[]) => void;
 }) {
-  const [text, setText] = useState(value.join("\n\n"));
+  const [text, setText] = useState(value.join(separator === "line" ? "\n" : "\n\n"));
   return (
     <Field label={label} hint={hint}>
       <textarea
@@ -339,10 +408,12 @@ function ParagraphsField({
         onChange={(e) => {
           setText(e.target.value);
           onChange(
-            e.target.value
-              .split(/\n\s*\n/)
-              .map((p) => p.replace(/\s*\n\s*/g, " ").trim())
-              .filter(Boolean),
+            separator === "line"
+              ? e.target.value.split("\n").map((l) => l.trim()).filter(Boolean)
+              : e.target.value
+                  .split(/\n\s*\n/)
+                  .map((p) => p.replace(/\s*\n\s*/g, " ").trim())
+                  .filter(Boolean),
           );
         }}
         className={`${inputClass} resize-y`}

@@ -3,9 +3,11 @@ import { Send, CircleCheck } from "lucide-react";
 import { sendContact } from "../lib/api";
 import { track } from "../lib/track";
 
+import type { PersonalContent } from "../data/homeContent";
+
 type Status = "idle" | "sending" | "sent" | "error";
 
-export default function Contact() {
+export default function Contact({ content }: { content: PersonalContent["contact"] }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -32,12 +34,9 @@ export default function Contact() {
   return (
     <section id="contact" className="border-t border-border py-20">
       <div className="container-prose">
-        <p className="text-meta uppercase tracking-[0.18em]">Contact</p>
-        <h2 className="heading-section mt-2">Drop a note.</h2>
-        <p className="mt-3 text-muted">
-          Best for advisory, partnerships, or to talk about Foundation / PlantagoAI. For
-          everything else there's email and LinkedIn in the footer.
-        </p>
+        <p className="text-meta uppercase tracking-[0.18em]">{content.eyebrow}</p>
+        <h2 className="heading-section mt-2">{content.title}</h2>
+        {content.body && <p className="mt-3 text-muted">{content.body}</p>}
         <form onSubmit={submit} className="mt-8 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <input

@@ -3,14 +3,10 @@ import { Sparkles, Send } from "lucide-react";
 import { sendChat, type ChatMessage } from "../lib/api";
 import { track } from "../lib/track";
 
-const SUGGESTIONS = [
-  "What is Foundation?",
-  "Tell me about your IBM years",
-  "Why Rust over Go?",
-  "What's the AutoScaler story?",
-];
+import type { PersonalContent } from "../data/homeContent";
 
-export default function Chat() {
+export default function Chat({ content }: { content: PersonalContent["chat"] }) {
+  const SUGGESTIONS = content.suggestions;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -48,14 +44,11 @@ export default function Chat() {
       <div className="container-prose">
         <p className="text-meta uppercase tracking-[0.18em]">
           <span className="inline-flex items-center gap-1.5">
-            <Sparkles size={12} /> Chat with my AI
+            <Sparkles size={12} /> {content.eyebrow}
           </span>
         </p>
-        <h2 className="heading-section mt-2">Ask anything about my work.</h2>
-        <p className="mt-3 text-muted">
-          Powered by Claude. Trained on my CV and a short bio. Ranges over career, projects,
-          and technical opinions on distributed systems, AI, and blockchain.
-        </p>
+        <h2 className="heading-section mt-2">{content.title}</h2>
+        {content.body && <p className="mt-3 text-muted">{content.body}</p>}
         <div className="mt-8 rounded-2xl border border-border bg-bg">
           <div
             ref={scrollerRef}

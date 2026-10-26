@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { Shield, ArrowUpRight } from "lucide-react";
-import { pillars } from "../data/cv";
-import PillarIcon from "./PillarIcon";
+import type { PersonalContent } from "../data/homeContent";
+import { ICONS } from "./Icon";
+import RichText, { toneColor } from "./RichText";
 
 function FoundationBadge({ size = 18, className }: { size?: number; className?: string }) {
   return (
@@ -17,25 +18,35 @@ function FoundationBadge({ size = 18, className }: { size?: number; className?: 
   );
 }
 
-export default function Pillars() {
+export default function Pillars({ content }: { content: PersonalContent["pillars"] }) {
   return (
     <section id="pillars" className="border-t border-border bg-surface/30 py-20">
       <div className="container-wide">
-        <p className="text-meta uppercase tracking-[0.18em]">What I'm building</p>
+        <p className="text-meta uppercase tracking-[0.18em]">{content.eyebrow}</p>
         <div className="mt-2 flex items-start gap-3">
           <FoundationBadge size={28} className="mt-2 shrink-0" />
           <h2 className="heading-section max-w-3xl">
-            Three pillars —{" "}
-            <span style={{ color: "hsl(var(--pillar-voice))" }}>Voice.</span>{" "}
-            <span style={{ color: "hsl(var(--pillar-share))" }}>Share.</span>{" "}
-            <span style={{ color: "hsl(var(--pillar-market))" }}>Market.</span>{" "}
-            <span className="text-muted">— on shared infrastructure, on Solana.</span>
+            {content.titleLead}
+            {content.titleWords.map((w, i) => (
+              <span key={i}>
+                {" "}
+                <span style={{ color: toneColor(w.tone) }}>{w.text}</span>
+              </span>
+            ))}
+            {content.titleTail && (
+              <>
+                {" "}
+                <span className="text-muted">{content.titleTail}</span>
+              </>
+            )}
           </h2>
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {pillars.map((p, i) => (
+          {content.cards.map((p, i) => {
+            const Icon = ICONS[p.icon] ?? ICONS.sparkles;
+            return (
             <motion.a
-              key={p.key}
+              key={i}
               href={p.href}
               target="_blank"
               rel="noopener noreferrer"
@@ -46,11 +57,8 @@ export default function Pillars() {
               className="group relative flex flex-col justify-between rounded-2xl border border-border bg-bg p-6 transition hover:border-ink"
             >
               <div>
-                <PillarIcon pillar={p.key} size={28} />
-                <h3
-                  className="mt-4 text-xl font-semibold"
-                  style={{ color: `hsl(var(--pillar-${p.key}))` }}
-                >
+                <Icon size={28} strokeWidth={2.2} style={{ color: toneColor(p.tone) }} />
+                <h3 className="mt-4 text-xl font-semibold" style={{ color: toneColor(p.tone) }}>
                   {p.name}.
                 </h3>
                 <p className="mt-2 text-sm text-ink/80">{p.blurb}</p>
@@ -63,21 +71,14 @@ export default function Pillars() {
                 />
               </div>
             </motion.a>
-          ))}
+            );
+          })}
         </div>
-        <p className="mt-10 max-w-2xl text-sm text-ink/85">
-          The infrastructure layer is{" "}
-          <a
-            href="https://plantagoai.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-ink underline decoration-primary decoration-2 underline-offset-4"
-          >
-            PlantagoAI
-          </a>{" "}
-          — shared identity, AI (with prompt caching), payments, messaging, and 12+ packages
-          reused across all three pillars.
-        </p>
+        {content.footnote && (
+          <p className="mt-10 max-w-2xl text-sm text-ink/85">
+            <RichText text={content.footnote} />
+          </p>
+        )}
       </div>
     </section>
   );

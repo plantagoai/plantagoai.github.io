@@ -2,7 +2,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X } from "lucide-react";
 
-export default function FloatingChat() {
+import type { PersonalContent } from "../data/homeContent";
+
+export default function FloatingChat({ content }: { content: PersonalContent["floatingChat"] }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -23,17 +25,14 @@ export default function FloatingChat() {
             transition={{ duration: 0.18 }}
             className="fixed bottom-24 right-6 z-40 w-[88vw] max-w-sm rounded-2xl border border-border bg-bg p-4 shadow-2xl"
           >
-            <p className="text-meta uppercase tracking-[0.18em]">Chat with my AI</p>
-            <p className="mt-2 text-sm text-muted">
-              Quick questions about my career or work? Ask here, or scroll to the full chat
-              panel.
-            </p>
+            <p className="text-meta uppercase tracking-[0.18em]">{content.eyebrow}</p>
+            <p className="mt-2 text-sm text-muted">{content.body}</p>
             <a
               href="#chat"
               onClick={() => setOpen(false)}
               className="mt-4 inline-block text-sm font-medium text-primary hover:underline"
             >
-              Open the full chat →
+              {content.linkLabel}
             </a>
           </motion.div>
         )}

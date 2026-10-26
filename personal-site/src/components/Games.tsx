@@ -1,37 +1,31 @@
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import Trivia from "./games/Trivia";
 import SybilHunt from "./games/SybilHunt";
 import ContainerPacking from "./games/ContainerPacking";
 import CloudArchitect from "./games/CloudArchitect";
 import { track } from "../lib/track";
 
-const TABS = [
-  { id: "trivia", name: "Trivia", subtitle: "Things I find delightful", Component: Trivia },
-  { id: "sybil", name: "Sybil hunt", subtitle: "Foundation · Verified Human", Component: SybilHunt },
-  {
-    id: "pack",
-    name: "Container packing",
-    subtitle: "IBM · Logistics Optimization",
-    Component: ContainerPacking,
-  },
-  {
-    id: "arch",
-    name: "Cloud architect",
-    subtitle: "IBM · OpenStack era",
-    Component: CloudArchitect,
-  },
-] as const;
+import type { PersonalContent } from "../data/homeContent";
 
-export default function Games() {
-  const [active, setActive] = useState<(typeof TABS)[number]["id"]>("trivia");
-  const Active = TABS.find((t) => t.id === active)!.Component;
+const GAMES: Record<string, ComponentType> = {
+  trivia: Trivia,
+  sybil: SybilHunt,
+  pack: ContainerPacking,
+  arch: CloudArchitect,
+};
+
+export default function Games({ content }: { content: PersonalContent["games"] }) {
+  const TABS = content.tabs
+    .filter((t) => GAMES[t.game])
+    .map((t) => ({ id: t.game, name: t.name, subtitle: t.subtitle, Component: GAMES[t.game] }));
+  const [picked, setActive] = useState<string>(TABS[0]?.id ?? "");
+  const active = TABS.some((t) => t.id === picked) ? picked : TABS[0]?.id;
+  const Active = TABS.find((t) => t.id === active)?.Component;
   return (
     <section id="games" className="border-t border-border py-20">
       <div className="container-wide">
-        <p className="text-meta uppercase tracking-[0.18em]">Play with my work</p>
-        <h2 className="heading-section mt-2 max-w-2xl">
-          Three small toys. Each one is a chapter of the CV in playable form.
-        </h2>
+        <p className="text-meta uppercase tracking-[0.18em]">{content.eyebrow}</p>
+        <h2 className="heading-section mt-2 max-w-2xl">{content.title}</h2>
         <div className="mt-8 flex flex-wrap gap-2 border-b border-border">
           {TABS.map((t) => (
             <button
@@ -54,7 +48,7 @@ export default function Games() {
           ))}
         </div>
         <div className="mt-6">
-          <Active />
+          {Active && <Active />}
         </div>
       </div>
     </section>
