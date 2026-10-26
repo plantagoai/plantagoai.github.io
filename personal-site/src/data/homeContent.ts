@@ -46,7 +46,8 @@ export const PERSONAL_SECTION_NOTES: Partial<Record<PersonalSectionId, string>> 
   dreamless: "The section that was on the page before the banner. Hidden by default.",
   foundationCard: "Hidden since the hero was shortened; show it to bring the card back.",
   statement: "From the Dreamless press kit. Leave the photo empty to sign without one.",
-  photo: "Upload a new photo to replace it; it is resized in the browser and saved with the section.",
+  photo:
+    "Right after the Hero, it sits beside the headline (under it on phones); anywhere else it is its own section. Upload a new photo to replace it; it is resized in the browser and saved with the section.",
 };
 
 /** Colours from the site's palette. */

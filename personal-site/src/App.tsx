@@ -26,6 +26,9 @@ export default function App() {
   // The first visible section that renders in the page flow (the floating
   // button doesn't), so the hero keeps its tall top padding only when first.
   const firstId = visible.find((s) => s.id !== "floatingChat")?.id;
+  // The photo placed straight after the hero sits beside the hero's text.
+  const heroIndex = visible.findIndex((s) => s.id === "hero");
+  const photoInHero = heroIndex >= 0 && visible[heroIndex + 1]?.id === "photo" && !!content.photo.image;
 
   useEffect(() => {
     track("page");
@@ -54,9 +57,15 @@ export default function App() {
       case "dreamlessBanner":
         return <DreamlessBanner content={content.dreamlessBanner} />;
       case "hero":
-        return <Hero content={content.hero} first={firstId === "hero"} />;
+        return (
+          <Hero
+            content={content.hero}
+            first={firstId === "hero"}
+            aside={photoInHero ? <Photo content={content.photo} inline /> : undefined}
+          />
+        );
       case "photo":
-        return <Photo content={content.photo} />;
+        return photoInHero ? null : <Photo content={content.photo} />;
       case "statement":
         return <Statement content={content.statement} />;
       case "foundationCard":
