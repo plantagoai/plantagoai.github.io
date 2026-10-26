@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Shield, ArrowUpRight } from "lucide-react";
-import type { PersonalContent } from "../data/homeContent";
+import { rotationSeconds, type PersonalContent } from "../data/homeContent";
+import { useProducts } from "../lib/products";
+import ProductCarousel from "./ProductCarousel";
 import { ICONS } from "./Icon";
 import RichText, { toneColor } from "./RichText";
 
@@ -19,6 +21,11 @@ function FoundationBadge({ size = 18, className }: { size?: number; className?: 
 }
 
 export default function Pillars({ content }: { content: PersonalContent["pillars"] }) {
+  const wantProducts = content.source !== "cards";
+  const products = useProducts(wantProducts);
+  // A blank frame holds the space while products load; the hand-made cards
+  // stand in if none can be read.
+  const showProducts = wantProducts && products !== null && products.length > 0;
   return (
     <section id="pillars" className="border-t border-border bg-surface/30 py-20">
       <div className="container-wide">
@@ -41,6 +48,11 @@ export default function Pillars({ content }: { content: PersonalContent["pillars
             )}
           </h2>
         </div>
+        {showProducts ? (
+          <ProductCarousel products={products} seconds={rotationSeconds(content.rotateSeconds)} />
+        ) : wantProducts && products === null ? (
+          <div className="mt-10 h-72 rounded-2xl border border-border bg-bg" aria-hidden />
+        ) : (
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {content.cards.map((p, i) => {
             const Icon = ICONS[p.icon] ?? ICONS.sparkles;
@@ -74,6 +86,7 @@ export default function Pillars({ content }: { content: PersonalContent["pillars
             );
           })}
         </div>
+        )}
         {content.footnote && (
           <p className="mt-10 max-w-2xl text-sm text-ink/85">
             <RichText text={content.footnote} />

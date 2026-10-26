@@ -5,6 +5,7 @@ import {
   PERSONAL_DEFAULTS,
   PERSONAL_FIELDS,
   PERSONAL_SECTION_IDS,
+  rotationSeconds,
 } from "../../../personal-site/src/data/homeContent";
 
 describe("mergePersonalHome", () => {
@@ -55,5 +56,22 @@ describe("side by side", () => {
     const rows = groupRows([e("a"), e("b", true), e("c", true), e("d", true), e("e"), e("f", true)]);
     expect(rows.map((r) => r.map((s) => s.id))).toEqual([["a", "b", "c"], ["d"], ["e", "f"]]);
     expect(groupRows([e("a", true)]).map((r) => r.length)).toEqual([1]);
+  });
+});
+
+describe("What I'm building", () => {
+  it("shows plantagoai.com products, 7 seconds each, unless saved otherwise", () => {
+    const home = mergePersonalHome({ content: { pillars: { titleLead: "Saved title" } } });
+    expect(home.content.pillars.source).toBe("products");
+    expect(rotationSeconds(home.content.pillars.rotateSeconds)).toBe(7);
+    expect(mergePersonalHome({ content: { pillars: { source: "cards" } } }).content.pillars.source).toBe("cards");
+  });
+
+  it("reads the seconds field leniently", () => {
+    expect(rotationSeconds("10")).toBe(10);
+    expect(rotationSeconds("")).toBe(7);
+    expect(rotationSeconds("abc")).toBe(7);
+    expect(rotationSeconds("1")).toBe(7);
+    expect(rotationSeconds("9999")).toBe(120);
   });
 });

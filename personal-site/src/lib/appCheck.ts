@@ -17,10 +17,13 @@ const appCheck = initializeAppCheck(app, {
   isTokenAutoRefreshEnabled: false,
 });
 
-/** Headers for a Firestore REST call; empty if no token could be had. */
+/** Headers for a Firestore REST call; empty if no token could be had. A
+    blocked reCAPTCHA script can leave getToken pending forever, so give up
+    after a few seconds rather than hold the page. */
 export async function appCheckHeaders(): Promise<Record<string, string>> {
+  const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 4000));
   try {
-    const { token } = await getToken(appCheck);
+    const { token } = await Promise.race([getToken(appCheck), timeout]);
     return { "X-Firebase-AppCheck": token };
   } catch {
     return {};
