@@ -976,6 +976,20 @@ function Footer() {
   );
 }
 
+/* Foundation's signature hero band: a clipped pastel field with four
+   drifting blurred blobs, ending on the diagonal. Honours
+   prefers-reduced-motion (see index.css). */
+function MeshField({ bleed = false }: { bleed?: boolean }) {
+  return (
+    <div className={bleed ? "mesh-field mesh-field-bleed" : "mesh-field"} aria-hidden="true">
+      <div className="mesh-blob mesh-blob-1" />
+      <div className="mesh-blob mesh-blob-2" />
+      <div className="mesh-blob mesh-blob-3" />
+      <div className="mesh-blob mesh-blob-4" />
+    </div>
+  );
+}
+
 export function App() {
   const { projects, loading } = useProjects();
   const { homepage, loading: homepageLoading } = useHomepage();
@@ -992,6 +1006,9 @@ export function App() {
     return [{ label, href: `#${anchor}` }];
   });
   const sectionKey = visible.map((s) => s.id).join(",");
+  // The pastel band belongs to the hero: behind the nav while the hero leads
+  // the page, behind the hero wherever it is moved, gone when it is hidden.
+  const heroOnTop = homepageLoading || visible[0]?.id === "hero";
 
   useEffect(() => {
     track("page");
@@ -1022,8 +1039,8 @@ export function App() {
 
   const renderSection = (id: SectionId) => {
     switch (id) {
-      case "hero":
-        return (
+      case "hero": {
+        const hero = (
           <Hero
             content={content.hero}
             projects={projects}
@@ -1031,6 +1048,15 @@ export function App() {
             packageCount={content.platform.packages.length}
           />
         );
+        if (heroOnTop) return hero;
+        // Moved down the page: the band travels with the hero, full width.
+        return (
+          <div className="relative">
+            <MeshField bleed />
+            <div className="relative z-[1]">{hero}</div>
+          </div>
+        );
+      }
       case "dreamless":
         return <DreamlessBanner content={content.dreamless} />;
       case "about":
@@ -1052,15 +1078,7 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-background mesh-hero">
-      {/* Foundation's signature hero band: a clipped pastel field with four
-          drifting blurred blobs. Sits behind the nav and hero, ends on the
-          diagonal. Honours prefers-reduced-motion (see index.css). */}
-      <div className="mesh-field" aria-hidden="true">
-        <div className="mesh-blob mesh-blob-1" />
-        <div className="mesh-blob mesh-blob-2" />
-        <div className="mesh-blob mesh-blob-3" />
-        <div className="mesh-blob mesh-blob-4" />
-      </div>
+      {heroOnTop && <MeshField />}
       <Nav navLinks={navLinks} />
       <main className="p-6 lg:p-8 max-w-5xl mx-auto space-y-10 animate-fade-in">
         {/* Wait for the saved layout, so a section hidden or edited in Admin
