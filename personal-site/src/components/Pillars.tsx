@@ -20,7 +20,54 @@ function FoundationBadge({ size = 18, className }: { size?: number; className?: 
   );
 }
 
-export default function Pillars({ content }: { content: PersonalContent["pillars"] }) {
+type HeadingContent = PersonalContent["pillarsHeading"];
+
+function Heading({ content }: { content: HeadingContent }) {
+  return (
+    <>
+      <p className="text-meta uppercase tracking-[0.18em]">{content.eyebrow}</p>
+      <div className="mt-2 flex items-start gap-3">
+        <FoundationBadge size={28} className="mt-2 shrink-0" />
+        <h2 className="heading-section max-w-3xl">
+          {content.titleLead}
+          {content.titleWords.map((w, i) => (
+            <span key={i}>
+              {" "}
+              <span style={{ color: toneColor(w.tone) }}>{w.text}</span>
+            </span>
+          ))}
+          {content.titleTail && (
+            <>
+              {" "}
+              <span className="text-muted">{content.titleTail}</span>
+            </>
+          )}
+        </h2>
+      </div>
+    </>
+  );
+}
+
+/** The "Three pillars" heading when it isn't directly above the products. */
+export function PillarsHeading({ content }: { content: HeadingContent }) {
+  return (
+    <section className="border-t border-border bg-surface/30 py-20">
+      <div className="container-wide">
+        <Heading content={content} />
+      </div>
+    </section>
+  );
+}
+
+/** The products (or hand-made cards), with the heading on top when it sits
+ *  directly above them, so the two read as one section as before. */
+export default function Pillars({
+  content,
+  heading,
+}: {
+  content: PersonalContent["pillars"];
+  heading: HeadingContent | null;
+}) {
   const wantProducts = content.source !== "cards";
   const products = useProducts(wantProducts);
   // A blank frame holds the space while products load; the hand-made cards
@@ -29,31 +76,17 @@ export default function Pillars({ content }: { content: PersonalContent["pillars
   return (
     <section id="pillars" className="border-t border-border bg-surface/30 py-20">
       <div className="container-wide">
-        <p className="text-meta uppercase tracking-[0.18em]">{content.eyebrow}</p>
-        <div className="mt-2 flex items-start gap-3">
-          <FoundationBadge size={28} className="mt-2 shrink-0" />
-          <h2 className="heading-section max-w-3xl">
-            {content.titleLead}
-            {content.titleWords.map((w, i) => (
-              <span key={i}>
-                {" "}
-                <span style={{ color: toneColor(w.tone) }}>{w.text}</span>
-              </span>
-            ))}
-            {content.titleTail && (
-              <>
-                {" "}
-                <span className="text-muted">{content.titleTail}</span>
-              </>
-            )}
-          </h2>
-        </div>
+        {heading && <Heading content={heading} />}
         {showProducts ? (
-          <ProductCarousel products={products} seconds={rotationSeconds(content.rotateSeconds)} />
+          <ProductCarousel
+            products={products}
+            seconds={rotationSeconds(content.rotateSeconds)}
+            className={heading ? "mt-10" : ""}
+          />
         ) : wantProducts && products === null ? (
-          <div className="mt-10 h-72 rounded-2xl border border-border bg-bg" aria-hidden />
+          <div className={`h-72 rounded-2xl border border-border bg-bg ${heading ? "mt-10" : ""}`} aria-hidden />
         ) : (
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
+        <div className={`grid gap-4 md:grid-cols-3 ${heading ? "mt-10" : ""}`}>
           {content.cards.map((p, i) => {
             const Icon = ICONS[p.icon] ?? ICONS.sparkles;
             return (

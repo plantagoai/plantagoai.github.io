@@ -58,7 +58,15 @@ const PRODUCT_COLORS: Record<string, string> = {
 
 const MAX_FEATURES = 4;
 
-export default function ProductCarousel({ products, seconds }: { products: Product[]; seconds: number }) {
+export default function ProductCarousel({
+  products,
+  seconds,
+  className = "mt-10",
+}: {
+  products: Product[];
+  seconds: number;
+  className?: string;
+}) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -77,7 +85,7 @@ export default function ProductCarousel({ products, seconds }: { products: Produ
 
   return (
     <div
-      className="mt-10"
+      className={className}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
