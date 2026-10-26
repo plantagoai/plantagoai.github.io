@@ -11,7 +11,7 @@ import {
 describe("mergePersonalHome", () => {
   it("puts the Dreamless banner on top and hides the older sections by default", () => {
     const home = mergePersonalHome(undefined);
-    expect(home.sections[0]).toEqual({ id: "dreamlessBanner", visible: true, sideBySide: false });
+    expect(home.sections[0]).toEqual({ id: "dreamlessBanner", visible: true, sideBySide: false, align: "left" });
     expect(home.sections.find((s) => s.id === "dreamless")?.visible).toBe(false);
     expect(home.sections.find((s) => s.id === "foundationCard")?.visible).toBe(false);
     expect(home.content).toEqual(PERSONAL_DEFAULTS);
@@ -101,5 +101,18 @@ describe("What I'm building", () => {
     expect(rotationSeconds("abc")).toBe(7);
     expect(rotationSeconds("1")).toBe(7);
     expect(rotationSeconds("9999")).toBe(120);
+  });
+});
+
+describe("alignment", () => {
+  it("starts each section at its own design and keeps a stored choice", () => {
+    const home = mergePersonalHome(undefined);
+    expect(home.sections.find((s) => s.id === "chat")?.align).toBe("left");
+    expect(home.sections.find((s) => s.id === "foundationCard")?.align).toBe("center");
+    const stored = mergePersonalHome({ sections: [{ id: "chat", visible: true, align: "right" }] });
+    expect(stored.sections.find((s) => s.id === "chat")?.align).toBe("right");
+    // Unknown values fall back to the section's default.
+    const bad = mergePersonalHome({ sections: [{ id: "foundationCard", visible: true, align: "middle" }] });
+    expect(bad.sections.find((s) => s.id === "foundationCard")?.align).toBe("center");
   });
 });

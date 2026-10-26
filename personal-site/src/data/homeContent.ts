@@ -482,7 +482,26 @@ const MOVED_FIELDS: Partial<Record<PersonalSectionId, { from: PersonalSectionId;
 /** Sections that start next to the one above them: the photo beside the hero. */
 const SIDE_BY_SIDE_BY_DEFAULT: PersonalSectionId[] = ["photo"];
 
-export interface PersonalSectionEntry { id: PersonalSectionId; visible: boolean; sideBySide: boolean }
+/** How a section lines up its heading, text and narrower blocks (Admin →
+ *  align button). Shared by both sites (plantagoai.com imports it from here). */
+export const SECTION_ALIGNS = ["left", "center", "right"] as const;
+export type SectionAlign = (typeof SECTION_ALIGNS)[number];
+
+export function readAlign(v: unknown, fallback: SectionAlign): SectionAlign {
+  return (SECTION_ALIGNS as readonly unknown[]).includes(v) ? (v as SectionAlign) : fallback;
+}
+
+/** Sections whose own design is centred; every other one starts left. */
+const CENTERED_BY_DEFAULT: PersonalSectionId[] = ["foundationCard"];
+/** Sections with no alignment to set: the footer has its own two-sided
+ *  layout and the floating button sits outside the page flow. */
+export const PERSONAL_NO_ALIGN: PersonalSectionId[] = ["footer", "floatingChat"];
+
+export function personalDefaultAlign(id: PersonalSectionId): SectionAlign {
+  return CENTERED_BY_DEFAULT.includes(id) ? "center" : "left";
+}
+
+export interface PersonalSectionEntry { id: PersonalSectionId; visible: boolean; sideBySide: boolean; align: SectionAlign }
 export interface PersonalHome { sections: PersonalSectionEntry[]; content: PersonalContent }
 
 function isId(v: unknown): v is PersonalSectionId {
@@ -497,18 +516,20 @@ export function mergePersonalHome(stored: Record<string, unknown> | undefined): 
     id,
     visible: !HIDDEN_BY_DEFAULT.includes(id),
     sideBySide: SIDE_BY_SIDE_BY_DEFAULT.includes(id),
+    align: personalDefaultAlign(id),
   }));
   const raw = Array.isArray(stored?.sections) ? (stored!.sections as unknown[]) : [];
   const seen = new Set<PersonalSectionId>();
   const sections: PersonalSectionEntry[] = [];
   for (const r of raw) {
-    const s = r as { id?: unknown; visible?: unknown; sideBySide?: unknown };
+    const s = r as { id?: unknown; visible?: unknown; sideBySide?: unknown; align?: unknown };
     if (!isId(s?.id) || seen.has(s.id)) continue;
     seen.add(s.id);
     sections.push({
       id: s.id,
       visible: s.visible !== false,
       sideBySide: typeof s.sideBySide === "boolean" ? s.sideBySide : SIDE_BY_SIDE_BY_DEFAULT.includes(s.id),
+      align: readAlign(s.align, personalDefaultAlign(s.id)),
     });
   }
   defaults.forEach((d, i) => {

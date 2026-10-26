@@ -1,5 +1,8 @@
 import { useState } from "react";
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
   ArrowDown,
   ArrowUp,
   ChevronDown,
@@ -17,6 +20,7 @@ import {
 } from "lucide-react";
 import {
   useHomepage,
+  defaultAlign,
   saveSectionOrder,
   saveSectionContent,
   DEFAULT_CONTENT,
@@ -31,11 +35,17 @@ import {
   PERSONAL_FIELDS,
   PERSONAL_SECTION_LABELS,
   PERSONAL_SECTION_NOTES,
+  PERSONAL_NO_ALIGN,
   MAX_PER_ROW,
+  SECTION_ALIGNS,
+  personalDefaultAlign,
+  type SectionAlign,
 } from "../../../../personal-site/src/data/homeContent";
 
 type Draft = Record<string, unknown>;
-type Entry = { id: string; visible: boolean; sideBySide: boolean };
+type Entry = { id: string; visible: boolean; sideBySide: boolean; align: SectionAlign };
+
+const ALIGN_ICONS = { left: AlignLeft, center: AlignCenter, right: AlignRight };
 
 /** One site's sections: where they load from and save to, and how each
  *  one is labelled and edited. */
@@ -49,6 +59,10 @@ export interface SectionsSite {
   fields: Record<string, FieldDef[]>;
   labels: Record<string, string>;
   notes: Record<string, string | undefined>;
+  /** The alignment a section's own design uses. */
+  defaultAlign: (id: string) => SectionAlign;
+  /** Sections outside the page flow, with no alignment to set. */
+  noAlign: string[];
 }
 
 export const PLANTAGOAI_SECTIONS: SectionsSite = {
@@ -64,6 +78,8 @@ export const PLANTAGOAI_SECTIONS: SectionsSite = {
   fields: SECTION_FIELDS,
   labels: SECTION_LABELS,
   notes: SECTION_NOTES,
+  defaultAlign: (id) => defaultAlign(id as never),
+  noAlign: [],
 };
 
 export const DAGANGILAT_SECTIONS: SectionsSite = {
@@ -79,6 +95,8 @@ export const DAGANGILAT_SECTIONS: SectionsSite = {
   fields: PERSONAL_FIELDS as unknown as Record<string, FieldDef[]>,
   labels: PERSONAL_SECTION_LABELS,
   notes: PERSONAL_SECTION_NOTES,
+  defaultAlign: (id) => personalDefaultAlign(id as never),
+  noAlign: PERSONAL_NO_ALIGN,
 };
 
 export function HomepageSectionsEditor({ site = PLANTAGOAI_SECTIONS }: { site?: SectionsSite }) {
@@ -116,6 +134,14 @@ export function HomepageSectionsEditor({ site = PLANTAGOAI_SECTIONS }: { site?: 
     return writeSections(next, sections[index].id);
   };
 
+  // Left → center → right → left.
+  const cycleAlign = (index: number) => {
+    const at = SECTION_ALIGNS.indexOf(sections[index].align);
+    const align = SECTION_ALIGNS[(at + 1) % SECTION_ALIGNS.length];
+    const next = sections.map((s, i) => (i === index ? { ...s, align } : s));
+    return writeSections(next, sections[index].id);
+  };
+
   // How many sections already share the row this one would join (the
   // side-by-side run directly above it, counting the section that starts it).
   const rowSizeAbove = (index: number) => {
@@ -140,6 +166,8 @@ export function HomepageSectionsEditor({ site = PLANTAGOAI_SECTIONS }: { site?: 
       <div className="divide-y divide-border">
         {sections.map((section, i) => {
           const isOpen = expanded === section.id;
+          const AlignIcon = ALIGN_ICONS[section.align];
+          const alignChanged = section.align !== site.defaultAlign(section.id);
           return (
             <div key={section.id}>
               <div className="px-4 py-3 flex items-center gap-3">
@@ -184,6 +212,21 @@ export function HomepageSectionsEditor({ site = PLANTAGOAI_SECTIONS }: { site?: 
                     {summary(content[section.id])}
                   </p>
                 </div>
+
+                {!site.noAlign.includes(section.id) && (
+                  <button
+                    onClick={() => cycleAlign(i)}
+                    disabled={busy !== null}
+                    className={`p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                      alignChanged ? "text-violet-700 bg-violet-50 hover:bg-violet-100" : "text-muted-foreground hover:bg-muted"
+                    }`}
+                    title={`Aligned ${section.align}: click for ${
+                      SECTION_ALIGNS[(SECTION_ALIGNS.indexOf(section.align) + 1) % SECTION_ALIGNS.length]
+                    }`}
+                  >
+                    <AlignIcon className="w-4 h-4" />
+                  </button>
+                )}
 
                 <button
                   onClick={() => toggleSideBySide(i)}

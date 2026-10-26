@@ -6,17 +6,17 @@ import RichText from "./RichText";
 export default function Statement({ content }: { content: PersonalContent["statement"] }) {
   return (
     <section id="statement" className="border-t border-border py-16">
-      <div className="container-prose">
+      <div className="container-wide">
         <motion.figure
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5 }}
-          className="relative"
+          className="relative max-w-3xl"
         >
           <span
             aria-hidden
-            className="pointer-events-none absolute right-0 -top-10 select-none font-serif text-[10rem] leading-none"
+            className="align-flip pointer-events-none absolute right-0 -top-10 select-none font-serif text-[10rem] leading-none"
             style={{ color: "hsl(var(--pillar-voice) / 0.18)" }}
           >
             &ldquo;

@@ -77,3 +77,58 @@
     border-color: hsl(var(--ink));
   }
 }
+
+/* Section alignment (Admin → align button). Set on a section's wrapper only
+   when it differs from the section's own design. It lines up headings, text
+   and width-limited blocks; forms, lists, tables and chat logs keep their
+   own layout. The same rules live in both sites' index.css. */
+[data-align="left"] {
+  --align-text: left;
+  --align-ml: 0;
+  --align-mr: auto;
+  --align-justify: flex-start;
+}
+[data-align="center"] {
+  --align-text: center;
+  --align-ml: auto;
+  --align-mr: auto;
+  --align-justify: center;
+}
+[data-align="right"] {
+  --align-text: right;
+  --align-ml: auto;
+  --align-mr: 0;
+  --align-justify: flex-end;
+}
+[data-align] :is(h1, h2, h3, p, blockquote, figcaption, .text-left, .text-center, .text-right):not(
+    :is(form, table, ul, ol, [data-align-skip]) *
+  ) {
+  text-align: var(--align-text);
+}
+[data-align] :is([class*="max-w-"], .w-fit):not(.container-wide, .container-prose, .max-w-5xl, .max-w-6xl):not(
+    :is(form, table, ul, ol, [data-align-skip]) *
+  ) {
+  margin-left: var(--align-ml);
+  margin-right: var(--align-mr);
+}
+/* Lines of a heading laid out as flex rows (icon + word), and badges that
+   sit straight in the section. */
+[data-align] :is(h1, h2, h3) .flex {
+  justify-content: var(--align-justify);
+}
+[data-align] section > .inline-flex {
+  display: flex;
+  width: fit-content;
+  margin-left: var(--align-ml);
+  margin-right: var(--align-mr);
+}
+/* A decorative corner mark moves to the other corner when text runs right. */
+[data-align="right"] .align-flip {
+  left: 0;
+  right: auto;
+}
+[data-align] :is(.flex-wrap, .justify-center, .justify-start, .justify-end):not(
+    :is(form, table, ul, ol, [data-align-skip]) *
+  ) {
+  justify-content: var(--align-justify);
+}

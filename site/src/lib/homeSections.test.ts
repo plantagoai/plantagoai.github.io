@@ -22,6 +22,14 @@ describe("mergeHomepage", () => {
     expect(page.content).toEqual(DEFAULT_CONTENT);
   });
 
+  it("keeps each section's own alignment unless one is stored", () => {
+    const page = mergeHomepage(undefined, legacy);
+    expect(page.sections.find((s) => s.id === "products")?.align).toBe("center");
+    expect(page.sections.find((s) => s.id === "about")?.align).toBe("left");
+    const stored = mergeHomepage({ sections: [{ id: "products", visible: true, align: "left" }] }, legacy);
+    expect(stored.sections.find((s) => s.id === "products")?.align).toBe("left");
+  });
+
   it("takes visibility for Releases and Dreamless from the old site settings", () => {
     const page = mergeHomepage(undefined, { releasesEnabled: true, dreamlessBannerEnabled: false });
     expect(page.sections.find((s) => s.id === "releases")?.visible).toBe(true);

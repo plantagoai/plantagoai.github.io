@@ -86,7 +86,7 @@ export default function Pillars({
         ) : wantProducts && products === null ? (
           <div className={`h-72 rounded-2xl border border-border bg-bg ${heading ? "mt-10" : ""}`} aria-hidden />
         ) : (
-        <div className={`grid gap-4 md:grid-cols-3 ${heading ? "mt-10" : ""}`}>
+        <div data-align-skip className={`grid gap-4 md:grid-cols-3 ${heading ? "mt-10" : ""}`}>
           {content.cards.map((p, i) => {
             const Icon = ICONS[p.icon] ?? ICONS.sparkles;
             return (
