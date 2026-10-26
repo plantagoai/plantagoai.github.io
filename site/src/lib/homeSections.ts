@@ -162,6 +162,8 @@ export interface FounderContent {
   navLabel: string;
   eyebrow: string;
   name: string;
+  image: string;
+  imageAlt: string;
   bio: string;
   cards: InfoCard[];
 }
@@ -345,6 +347,8 @@ export const DEFAULT_CONTENT: SectionContent = {
     navLabel: "Founder",
     eyebrow: "Founder",
     name: "Dagan Gilat",
+    image: "/dagan-gilat.jpg",
+    imageAlt: "Dagan Gilat",
     bio:
       "Hands-on founder, architect, and researcher with 25+ years building production systems at the intersection of distributed systems, cloud infrastructure, and applied AI. Track record of taking research from whiteboard to shipped product — IBM cloud platforms generating $100M+ in revenue, ML-driven cloud-AI products at Toga Networks, and a current verified-human governance stack on Solana. Deep expertise in Rust and Go; comfortable from kernel-adjacent code up to founder-level product strategy.",
     cards: [
@@ -637,6 +641,8 @@ export const SECTION_FIELDS: Record<SectionId, FieldDef[]> = {
     navField,
     eyebrowField,
     { key: "name", label: "Name", kind: "text" },
+    { key: "image", label: "Photo (left of the name)", kind: "image", hint: "Clear it to show no photo." },
+    { key: "imageAlt", label: "Photo description (alt text)", kind: "text" },
     { key: "bio", label: "Bio", kind: "textarea" },
     cardFields("Card"),
   ],
