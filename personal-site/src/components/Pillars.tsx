@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Shield, ArrowUpRight } from "lucide-react";
 import { rotationSeconds, type PersonalContent } from "../data/homeContent";
 import { useProducts } from "../lib/products";
-import ProductCarousel from "./ProductCarousel";
+import ProductShowcase, { ProductShowcaseHeading } from "./ProductShowcase";
 import { ICONS } from "./Icon";
 import RichText, { toneColor } from "./RichText";
 
@@ -78,11 +78,10 @@ export default function Pillars({
       <div className="container-wide">
         {heading && <Heading content={heading} />}
         {showProducts ? (
-          <ProductCarousel
-            products={products}
-            seconds={rotationSeconds(content.rotateSeconds)}
-            className={heading ? "mt-10" : ""}
-          />
+          <div className={heading ? "mt-10" : ""}>
+            <ProductShowcaseHeading eyebrow={content.productsEyebrow} title={content.productsTitle} />
+            <ProductShowcase products={products} seconds={rotationSeconds(content.rotateSeconds)} />
+          </div>
         ) : wantProducts && products === null ? (
           <div className={`h-72 rounded-2xl border border-border bg-bg ${heading ? "mt-10" : ""}`} aria-hidden />
         ) : (

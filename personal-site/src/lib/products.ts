@@ -1,56 +1,38 @@
 import { useEffect, useState } from "react";
 import { appCheckHeaders } from "./appCheck";
 import { fromFirestore } from "./home";
+import type { ShowcaseProduct } from "../components/ProductShowcase";
 
 /* The products plantagoai.com lists (Firestore `projects`, edited in
    plantagoai.com/admin → Products). Only enabled ones, in their Admin order. */
 const LIST_URL =
   "https://firestore.googleapis.com/v1/projects/plantagoai/databases/(default)/documents/projects?pageSize=100";
 
-export interface Product {
-  slug: string;
-  name: string;
-  subtitle: string;
-  description: string;
-  iconKey: string;
-  colorKey: string;
-  highlights: string[];
-  stage: string;
-  version: string | null;
-  url: string | null;
-  urlLabel: string;
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  inprogress: "In Development",
-  alpha: "Alpha",
-  beta: "Beta",
-  invitation: "By Invitation",
-  production: "Production",
-};
+export type Product = ShowcaseProduct;
 
 const str = (v: unknown) => (typeof v === "string" ? v : "");
+const strOrNull = (v: unknown) => str(v) || null;
 
 export function toProducts(docs: Record<string, unknown>[]): Product[] {
   return docs
     .filter((d) => d.enabled === true && str(d.name))
     .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
-    .map((d) => {
-      const url = str(d.liveUrl) || str(d.landingUrl) || null;
-      return {
-        slug: str(d.slug),
-        name: str(d.name),
-        subtitle: str(d.subtitle),
-        description: str(d.description),
-        iconKey: str(d.iconKey),
-        colorKey: str(d.colorKey),
-        highlights: Array.isArray(d.highlights) ? d.highlights.filter((h): h is string => typeof h === "string" && !!h) : [],
-        stage: str(d.statusText) || STATUS_LABELS[str(d.statusKind)] || "",
-        version: str(d.version) || null,
-        url,
-        urlLabel: str(d.liveLabel) || "Visit",
-      };
-    });
+    .map((d) => ({
+      slug: str(d.slug),
+      name: str(d.name),
+      subtitle: str(d.subtitle),
+      description: str(d.description),
+      iconKey: str(d.iconKey),
+      colorKey: str(d.colorKey),
+      highlights: Array.isArray(d.highlights) ? d.highlights.filter((h): h is string => typeof h === "string" && !!h) : [],
+      statusKind: str(d.statusKind),
+      statusText: str(d.statusText),
+      version: strOrNull(d.version),
+      liveUrl: strOrNull(d.liveUrl),
+      liveLabel: strOrNull(d.liveLabel),
+      docsUrl: strOrNull(d.docsUrl),
+      repoUrl: strOrNull(d.repoUrl),
+    }));
 }
 
 /** Enabled products; null until loaded, [] if they couldn't be read. */
