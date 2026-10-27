@@ -370,7 +370,7 @@ function Photo({ content }: { content: PhotoContent }) {
   if (!content.image) return null;
   return (
     <section aria-label={content.imageAlt || "Photo"} className="scroll-mt-20">
-      <figure className="flex flex-col items-center gap-4 sm:flex-row sm:gap-8 rounded-xl border border-border bg-card p-5 md:p-6 shadow-elevation-1">
+      <figure className="align-row flex flex-col items-center gap-4 sm:flex-row sm:gap-8 rounded-xl border border-border bg-card p-5 md:p-6 shadow-elevation-1">
         <Portrait src={content.image} alt={content.imageAlt} className="h-48 w-48 md:h-56 md:w-56" />
         {content.caption && (
           <figcaption className="text-center sm:text-left text-lg md:text-xl font-medium text-foreground leading-snug whitespace-pre-line">
@@ -801,7 +801,7 @@ function Founder({ content }: { content: FounderContent }) {
   return (
     <section id="founder" className="scroll-mt-20">
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="bg-muted/70 p-5 border-b border-border flex items-center gap-5">
+        <div className="align-row bg-muted/70 p-5 border-b border-border flex items-center gap-5">
           {content.image && (
             <Portrait src={content.image} alt={content.imageAlt} className="h-24 w-24 md:h-28 md:w-28" />
           )}

@@ -110,11 +110,20 @@ function paletteVars(colorKey: string): CSSProperties {
   } as CSSProperties;
 }
 
-/** "PORTFOLIO / Current Products": the heading above the carousel. */
-export function ProductShowcaseHeading({ eyebrow, title }: { eyebrow: string; title: string }) {
+/** "PORTFOLIO / Current Products": the heading above the carousel.
+ *  `align` is the section's default; an Admin alignment overrides it. */
+export function ProductShowcaseHeading({
+  eyebrow,
+  title,
+  align = "center",
+}: {
+  eyebrow: string;
+  title: string;
+  align?: "left" | "center" | "right";
+}) {
   if (!eyebrow && !title) return null;
   return (
-    <div className="ps ps-heading">
+    <div className="ps ps-heading" style={{ "--ps-align": align } as CSSProperties}>
       {eyebrow && <p className="ps-eyebrow">{eyebrow}</p>}
       {title && <h2 className="ps-title">{title}</h2>}
     </div>

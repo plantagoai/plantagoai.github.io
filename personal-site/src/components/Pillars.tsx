@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Shield, ArrowUpRight } from "lucide-react";
-import { rotationSeconds, type PersonalContent } from "../data/homeContent";
+import { personalDefaultAlign, rotationSeconds, type PersonalContent } from "../data/homeContent";
 import { useProducts } from "../lib/products";
 import ProductShowcase, { ProductShowcaseHeading } from "./ProductShowcase";
 import { ICONS } from "./Icon";
@@ -26,9 +26,9 @@ function Heading({ content }: { content: HeadingContent }) {
   return (
     <>
       <p className="text-meta uppercase tracking-[0.18em]">{content.eyebrow}</p>
-      <div className="mt-2 flex items-start gap-3">
+      <div className="align-row mt-2 flex max-w-3xl items-start gap-3">
         <FoundationBadge size={28} className="mt-2 shrink-0" />
-        <h2 className="heading-section max-w-3xl">
+        <h2 className="heading-section">
           {content.titleLead}
           {content.titleWords.map((w, i) => (
             <span key={i}>
@@ -79,7 +79,11 @@ export default function Pillars({
         {heading && <Heading content={heading} />}
         {showProducts ? (
           <div className={heading ? "mt-10" : ""}>
-            <ProductShowcaseHeading eyebrow={content.productsEyebrow} title={content.productsTitle} />
+            <ProductShowcaseHeading
+              eyebrow={content.productsEyebrow}
+              title={content.productsTitle}
+              align={personalDefaultAlign("pillars")}
+            />
             <ProductShowcase products={products} seconds={rotationSeconds(content.rotateSeconds)} />
           </div>
         ) : wantProducts && products === null ? (

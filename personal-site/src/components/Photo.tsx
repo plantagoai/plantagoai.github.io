@@ -31,7 +31,7 @@ export default function Photo({ content, inline = false }: { content: PersonalCo
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-8"
+          className="align-row flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-8"
         >
           <img
             src={content.image}
@@ -42,7 +42,9 @@ export default function Photo({ content, inline = false }: { content: PersonalCo
             className="h-44 w-44 shrink-0 rounded-3xl border border-border object-cover shadow-xl sm:h-56 sm:w-56"
           />
           {content.caption && (
-            <figcaption className="max-w-md whitespace-pre-line text-lg font-medium text-ink/85">
+            // An inline width, not max-w-md: alignment pushes max-w-* blocks
+            // aside with auto margins, which would split photo and caption.
+            <figcaption style={{ maxWidth: "28rem" }} className="whitespace-pre-line text-lg font-medium text-ink/85">
               {content.caption}
             </figcaption>
           )}

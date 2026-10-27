@@ -30,7 +30,7 @@ export default function FoundationCard({ content }: { content: PersonalContent["
                 "radial-gradient(circle at 30% 20%, hsl(var(--pillar-voice) / 0.22), transparent 55%),radial-gradient(circle at 70% 60%, hsl(var(--pillar-share) / 0.18), transparent 55%),radial-gradient(circle at 30% 80%, hsl(var(--pillar-market) / 0.18), transparent 55%)",
             }}
           />
-          <div className="relative rounded-3xl border border-border bg-surface/80 p-7 shadow-xl backdrop-blur-sm transition-shadow group-hover:shadow-2xl sm:p-8">
+          <div data-align-skip className="relative rounded-3xl border border-border bg-surface/80 p-7 shadow-xl backdrop-blur-sm transition-shadow group-hover:shadow-2xl sm:p-8">
             <div className="flex items-center gap-2">
               <span className="inline-block h-2 w-2 rounded-full" style={{ background: "hsl(var(--pillar-share))" }} />
               <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted">{content.eyebrow}</p>
