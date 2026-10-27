@@ -10,8 +10,10 @@
   --ps-card: #ffffff;
 }
 
+/* Follows the section's Admin alignment (--align-text, set by a data-align
+   wrapper); without one, the section's own default passed in --ps-align. */
 .ps-heading {
-  text-align: center;
+  text-align: var(--align-text, var(--ps-align, center));
   margin-bottom: 1.5rem;
 }
 .ps-eyebrow {

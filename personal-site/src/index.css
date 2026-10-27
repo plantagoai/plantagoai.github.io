@@ -122,6 +122,16 @@
   margin-left: var(--align-ml);
   margin-right: var(--align-mr);
 }
+/* Rows that move as a whole (photo + caption, icon + heading): opt in with
+   .align-row. Stacked on phones, they line up their items instead. */
+[data-align] .align-row {
+  justify-content: var(--align-justify);
+}
+@media (max-width: 639px) {
+  [data-align] .align-row.flex-col {
+    align-items: var(--align-justify);
+  }
+}
 /* A decorative corner mark moves to the other corner when text runs right. */
 [data-align="right"] .align-flip {
   left: 0;
