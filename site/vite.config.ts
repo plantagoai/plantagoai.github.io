@@ -9,6 +9,9 @@ export default defineConfig({
   },
   plugins: [react()],
   resolve: {
+    // The product carousel is shared from personal-site/ (dagangilat.com):
+    // its imports must use this package's copies, never a second React.
+    dedupe: ["react", "react-dom", "lucide-react"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },

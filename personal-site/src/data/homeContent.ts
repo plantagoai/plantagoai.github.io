@@ -34,7 +34,7 @@ export const PERSONAL_SECTION_LABELS: Record<PersonalSectionId, string> = {
   foundationCard: "Foundation card (Your Voice. Share. Market.)",
   dreamless: "Dreamless intro (older wide banner)",
   pillarsHeading: "Three pillars heading",
-  pillars: "What I'm building (products)",
+  pillars: "Current Products (carousel)",
   timeline: "Career timeline",
   games: "Games",
   chat: "Chat with my AI",
@@ -144,6 +144,10 @@ export interface PersonalContent {
     titleTail: string;
   };
   pillars: {
+    /* Not "eyebrow"/"title": older saved copies of this section still carry
+       the Three pillars eyebrow under that key. */
+    productsEyebrow: string;
+    productsTitle: string;
     source: PillarsSource;
     rotateSeconds: string;
     cards: { name: string; tone: PersonalTone; icon: PersonalIcon; blurb: string; handle: string; href: string }[];
@@ -273,6 +277,8 @@ export const PERSONAL_DEFAULTS: PersonalContent = {
     titleTail: "— on shared infrastructure, on Solana.",
   },
   pillars: {
+    productsEyebrow: "Portfolio",
+    productsTitle: "Current Products",
     source: "products",
     rotateSeconds: "7",
     cards: [
@@ -675,6 +681,8 @@ export const PERSONAL_FIELDS: Record<PersonalSectionId, Field[]> = {
     { key: "titleTail", label: "Title end (grey)", kind: "text" },
   ],
   pillars: [
+    { key: "productsEyebrow", label: "Eyebrow", kind: "text", hint: "Above the products, as on plantagoai.com. Leave it and the title empty for no heading." },
+    { key: "productsTitle", label: "Title", kind: "text" },
     {
       key: "source",
       label: "Show",

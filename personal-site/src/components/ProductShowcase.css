@@ -1,0 +1,263 @@
+/* The product carousel both sites show: plantagoai.com "Current Products"
+   and dagangilat.com "What I'm building". Plain CSS with its own values,
+   because the two sites name their Tailwind colours differently; the values
+   are plantagoai.com's (site/src/index.css and tailwind.config.ts). */
+.ps {
+  --ps-ink: #1d1d1f;
+  --ps-muted: #6e6e73;
+  --ps-line: #e5e5e7;
+  --ps-fill: #f5f5f7;
+  --ps-card: #ffffff;
+}
+
+.ps-heading {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.ps-eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ps-muted, #6e6e73);
+}
+.ps-title {
+  margin: 0;
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 600;
+  color: var(--ps-ink, #1d1d1f);
+}
+@media (min-width: 768px) {
+  .ps-title {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+}
+
+/* Every card sits in the same grid cell, so the frame keeps the tallest
+   card's height and the page below never jumps. */
+.ps-stage {
+  position: relative;
+  display: grid;
+}
+.ps-slide {
+  grid-area: 1 / 1;
+  transition: opacity 0.5s;
+}
+.ps-slide[aria-hidden="true"] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.ps-card {
+  height: 100%;
+  box-sizing: border-box;
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--ps-card);
+  border: 1px solid var(--ps-line);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.04);
+  text-align: left;
+}
+@media (min-width: 768px) {
+  .ps-card {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2.5rem;
+    padding: 2rem;
+  }
+}
+.ps-main {
+  display: flex;
+  flex-direction: column;
+}
+.ps-who {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.ps-icon {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(to bottom right, var(--ps-from), var(--ps-to));
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.04);
+}
+.ps-name {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: var(--ps-ink);
+}
+.ps-subtitle {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ps-muted);
+}
+.ps-badge {
+  margin-top: 1rem;
+  width: fit-content;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.ps-badge-version {
+  opacity: 0.7;
+}
+.ps-description {
+  margin: 1rem 0 0;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--ps-muted);
+}
+.ps-links {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ps-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--ps-line);
+  border-radius: 14px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  text-decoration: none;
+  background: rgb(245 245 247 / 0.4);
+  color: rgb(29 29 31 / 0.8);
+  transition: color 0.15s, background-color 0.15s, opacity 0.15s;
+}
+.ps-link:hover {
+  color: var(--ps-ink);
+  background: rgb(245 245 247 / 0.7);
+}
+.ps-link-live {
+  background: var(--ps-wash);
+  color: var(--ps-text);
+  border-color: var(--ps-wash-line);
+}
+.ps-link-live:hover {
+  background: var(--ps-wash);
+  color: var(--ps-text);
+  opacity: 0.8;
+}
+.ps-features-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ps-muted);
+}
+.ps-features {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ps-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: rgb(29 29 31 / 0.8);
+}
+.ps-features li + li {
+  margin-top: 0.625rem;
+}
+.ps-check {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+  color: var(--ps-check);
+}
+
+.ps-progress {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 0 0 16px 16px;
+}
+.ps-progress > div {
+  height: 100%;
+  width: 100%;
+  background: var(--ps-dot);
+  transform-origin: left;
+  animation: ps-progress linear forwards;
+}
+@keyframes ps-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.ps-controls {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.ps-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.ps-dot {
+  height: 0.5rem;
+  width: 0.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--ps-line);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ps-dot:hover {
+  background: var(--ps-muted);
+}
+.ps-dot[aria-current="true"] {
+  width: 1.5rem;
+  background: var(--ps-ink);
+}
+.ps-arrows {
+  display: flex;
+  gap: 0.5rem;
+}
+.ps-arrow {
+  display: flex;
+  padding: 0.375rem;
+  border: 1px solid var(--ps-line);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--ps-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ps-arrow:hover {
+  border-color: var(--ps-ink);
+  color: var(--ps-ink);
+}

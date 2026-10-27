@@ -12,8 +12,6 @@ import {
   CheckCheck,
   AlertCircle,
   Sparkles,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { Fragment, useState, useEffect, type FormEvent } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
@@ -49,6 +47,8 @@ import {
 } from "./lib/homeSections";
 import { outboundSlug, track, trackSections } from "./lib/track";
 import { groupRows, rotationSeconds, rowColumns } from "../../personal-site/src/data/homeContent";
+// The same carousel dagangilat.com shows, so the two sites stay identical.
+import ProductShowcase from "../../personal-site/src/components/ProductShowcase";
 
 type NavLink = { label: string; href: string };
 
@@ -576,189 +576,6 @@ function SectionHeading({ content }: { content: HeadingContent }) {
   );
 }
 
-const CAROUSEL_FEATURES = 4;
-
-/* The carousel's card: the same layout dagangilat.com uses for these products
-   (who it is and the link on the left, main features on the right), so a
-   product fits in about a third of the height of its full card. */
-function CompactProjectCard({ project }: { project: Project }) {
-  const palette = COLORS[project.colorKey] ?? COLORS.indigo;
-  const Icon = getIconComponent(project.iconKey);
-  const badgeClass = STATUS_BADGE_CLASSES[project.statusKind];
-  return (
-    <div
-      data-align-skip
-      className="h-full bg-card border border-border rounded-xl shadow-elevation-1 p-6 md:p-8 grid gap-6 md:grid-cols-2 md:gap-10"
-    >
-      <div className="flex flex-col">
-        <div className="flex items-center gap-4">
-          <div
-            className={`w-12 h-12 shrink-0 bg-gradient-to-br ${palette.gradient} rounded-lg flex items-center justify-center shadow-elevation-1`}
-          >
-            <Icon className="w-6 h-6 text-white" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-foreground font-semibold text-xl">{project.name}</h3>
-            <p className="text-muted-foreground text-base">{project.subtitle}</p>
-          </div>
-        </div>
-        {project.statusText && (
-          <span className={`mt-4 w-fit text-xs font-mono px-2 py-0.5 rounded border ${badgeClass}`}>
-            {project.statusText}
-            {project.version && <span className="opacity-70"> · v{project.version}</span>}
-          </span>
-        )}
-        <p className="mt-4 text-base text-muted-foreground">{project.description}</p>
-        <div className="mt-auto pt-6 flex flex-wrap items-center gap-2">
-          {project.liveUrl && (
-            <a
-              href={project.liveUrl}
-              data-track={project.slug}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg ${palette.accentBg} ${palette.accentColor} border ${palette.accentBorder} text-base hover:opacity-80 transition-opacity`}
-            >
-              <ExternalLink className="w-4 h-4" />
-              {project.liveLabel || "Try Live Demo"}
-            </a>
-          )}
-          {project.docsUrl && (
-            <a
-              href={project.docsUrl}
-              data-track={`${project.slug}-docs`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted/40 text-foreground/80 border border-border text-base hover:text-foreground hover:bg-muted/70 transition-colors"
-            >
-              <BookOpen className="w-4 h-4" />
-              Docs
-            </a>
-          )}
-          {project.repoUrl && (
-            <a
-              href={project.repoUrl}
-              data-track={`${project.slug}-source`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted/40 text-foreground/80 border border-border text-base hover:text-foreground hover:bg-muted/70 transition-colors"
-            >
-              <Github className="w-4 h-4" />
-              Source
-            </a>
-          )}
-        </div>
-      </div>
-      {project.highlights.length > 0 && (
-        <div>
-          <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Key Features</h4>
-          <div className="space-y-2.5">
-            {project.highlights.slice(0, CAROUSEL_FEATURES).map((item) => (
-              <div key={item} className="flex items-start gap-2 text-base text-foreground/80">
-                <CheckCircle2 className={`w-4 h-4 ${palette.checkColor} mt-1 shrink-0`} />
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function prefersReducedMotion(): boolean {
-  return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-}
-
-/* One product card at a time, advancing on a timer that pauses on hover or
-   focus. Every card sits in the same grid cell, so the frame keeps the
-   tallest card's height and the page below never jumps. */
-function ProjectCarousel({ projects, seconds }: { projects: Project[]; seconds: number }) {
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [reduceMotion] = useState(prefersReducedMotion);
-  const count = projects.length;
-  const current = Math.min(index, count - 1);
-  const go = (i: number) => setIndex(((i % count) + count) % count);
-
-  useEffect(() => {
-    if (paused || count < 2) return;
-    const t = setTimeout(() => setIndex((i) => (i + 1) % count), seconds * 1000);
-    return () => clearTimeout(t);
-  }, [index, paused, count, seconds]);
-
-  const palette = COLORS[projects[current].colorKey] ?? COLORS.indigo;
-
-  return (
-    <div
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
-      aria-roledescription="carousel"
-    >
-      <div className="relative grid">
-        {projects.map((project, i) => (
-          <div
-            key={project.slug}
-            className={`[grid-area:1/1] transition-opacity duration-500 ${
-              i === current ? "opacity-100" : "pointer-events-none invisible opacity-0"
-            }`}
-            aria-hidden={i !== current}
-            aria-label={`${i + 1} of ${count}: ${project.name}`}
-          >
-            <CompactProjectCard project={project} />
-          </div>
-        ))}
-        {count > 1 && !paused && !reduceMotion && (
-          <div className="absolute inset-x-px bottom-px h-0.5 overflow-hidden rounded-b-xl">
-            <div
-              key={current}
-              className={`h-full ${palette.dotColor} carousel-progress`}
-              style={{ animationDuration: `${seconds}s` }}
-            />
-          </div>
-        )}
-      </div>
-      {count > 1 && (
-        <div className="mt-4 flex items-center justify-between gap-4">
-          <div className="flex flex-wrap gap-2">
-            {projects.map((p, i) => (
-              <button
-                key={p.slug}
-                type="button"
-                onClick={() => go(i)}
-                aria-label={`Show ${p.name}`}
-                aria-current={i === current}
-                className={`h-2 rounded-full transition-all ${
-                  i === current ? "w-6 bg-foreground" : "w-2 bg-border hover:bg-muted-foreground"
-                }`}
-              />
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => go(current - 1)}
-              aria-label="Previous product"
-              className="rounded-full border border-border p-1.5 text-muted-foreground transition hover:border-foreground hover:text-foreground"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => go(current + 1)}
-              aria-label="Next product"
-              className="rounded-full border border-border p-1.5 text-muted-foreground transition hover:border-foreground hover:text-foreground"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function Projects({ content, projects }: { content: ProductsContent; projects: Project[] }) {
   const visible = projects.filter((p) => p.enabled);
   return (
@@ -766,7 +583,7 @@ function Projects({ content, projects }: { content: ProductsContent; projects: P
       <SectionHeading content={content} />
 
       {content.layout === "carousel" && visible.length > 1 ? (
-        <ProjectCarousel projects={visible} seconds={rotationSeconds(content.rotateSeconds)} />
+        <ProductShowcase products={visible} seconds={rotationSeconds(content.rotateSeconds)} />
       ) : (
         <div className="space-y-6">
           {visible.map((project) => (
