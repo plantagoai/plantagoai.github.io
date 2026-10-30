@@ -6,6 +6,9 @@ import { ICON_MAP } from "./projects";
 import { DEFAULT_SETTINGS, useSiteSettings, type SiteSettings } from "./siteSettings";
 import { readAlign, type SectionAlign } from "../../../personal-site/src/data/homeContent";
 
+/** The Dreamless poster with the full Japanese title ドリームレス：ザ・ハッシュ (30 Oct 2026). A new name, so no cache serves the old art. */
+const DREAMLESS_POSTER = "/dreamless-poster-v2.webp";
+
 /* Homepage sections as content, so every block on plantagoai.com can be
    edited, reordered and hidden from Admin → Homepage sections.
 
@@ -253,7 +256,7 @@ export const DEFAULT_CONTENT: SectionContent = {
       "When the world falls into the Hush, a sleep nobody wakes from, Kai and his robot Tofu keep watch over a city gone quiet. A 28-episode AI-animated anime series, about a minute an episode, made with YourContentCreator — every episode written, drawn, voiced and scored by AI agents and reviewed by a person.",
     buttonLabel: "Watch the series",
     url: "https://dreamless.micromedia-ai.com",
-    image: "/dreamless-poster.webp",
+    image: DREAMLESS_POSTER,
     imageAlt:
       "Dreamless: The Hush poster — Kai and his robot Tofu on a balcony above a sleeping city at night",
   },
@@ -480,6 +483,9 @@ export function mergeHomepage(stored: Record<string, unknown> | undefined, legac
   for (const id of SECTION_IDS) {
     content[id] = { ...DEFAULT_CONTENT[id], ...(storedContent[id] ?? {}) };
   }
+  // A saved homepage keeps the old poster path, which browsers have cached with the old title art.
+  const dreamless = content.dreamless as { image?: string };
+  if (dreamless.image === "/dreamless-poster.webp") dreamless.image = DREAMLESS_POSTER;
 
   return { sections, content: content as unknown as SectionContent };
 }
